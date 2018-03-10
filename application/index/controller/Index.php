@@ -1,6 +1,6 @@
 <?php
 /**
- * Project: Catfish Blog.
+ * Project: Catfish CMS.
  * Author: A.J <804644245@qq.com>
  * Copyright: http://www.catfish-cms.com All rights reserved.
  * Date: 2016/9/29
@@ -16,6 +16,8 @@ use think\Session;
 use think\Validate;
 use think\Hook;
 use think\Lang;
+
+use think\Config;
 
 class Index extends Common
 {
@@ -73,41 +75,6 @@ class Index extends Common
             $this->home_side_bottom = $this->params['home_side_bottom'];
         }
         $this->assign('home_side_bottom', $this->home_side_bottom);
-        $page = 1;
-        if(Request::instance()->has('page','get'))
-        {
-            $page = Request::instance()->get('page');
-        }
-        $catfishBlog = Cache::get('catfishBlog_'.$page);
-        if($catfishBlog == false)
-        {
-            $data = Db::view('posts','id,post_keywords as guanjianzi,post_title as biaoti,post_excerpt as zhaiyao,post_modified as fabushijian,comment_count as pinglunshu,thumbnail as suolvetu,post_hits as yuedu,post_like as zan')
-                ->view('users','user_login as yonghu,user_nicename as nicheng,avatar as touxiang,sex as xingbie','users.id=posts.post_author')
-                ->where('post_status','=',1)
-                ->where('post_type',['=',0],['=',2],['=',3],['=',4],['=',5],['=',6],['=',7],['=',8],'or')
-                ->where('status','=',1)
-                ->where('post_date','<= time',date('Y-m-d H:i:s'))
-                ->order('istop desc,post_modified desc')
-                ->paginate($this->everyPageShows);
-            $pages = $data->render();
-            $pageArr = $data->toArray();
-            $data = $this->addLargerPicture($pageArr['data']);
-            unset($pageArr['data']);
-            $catfishBlog = [
-                'changdu' => count($data),
-                'neirong' => $this->addArticleHref($data),
-                'pages' => $pages,
-                'paging' => $pageArr
-            ];
-            Cache::set('catfishBlog_'.$page,$catfishBlog,3600);
-        }
-        $catfishBlog['lang'] = $this->lang;
-        $catfishBlog['page'] = $page;
-        Hook::add('filter_catfishBlog',$this->plugins);
-        Hook::listen('filter_catfishBlog',$catfishBlog,$this->ccc);
-        unset($catfishBlog['lang']);
-        unset($catfishBlog['page']);
-        $this->assign('catfishBlog', $catfishBlog);
         $param = '';
         Hook::add('view_post',$this->plugins);
         Hook::listen('view_post',$param,$this->ccc);
@@ -126,7 +93,7 @@ class Index extends Common
             Cache::set('links',$data_links,3600);
         }
         $this->assign('links', $data_links);
-        $template = $this->receive('index');
+        $template = $this->checkc($this->receive('index'));
         $this->unifiedAssignment('home');
         $this->assign('pageUrl', $this->getpage());
         if(Request::instance()->isMobile() && is_file(APP_PATH.'../public/'.$template.'/mobile/index.html'))
@@ -238,7 +205,7 @@ class Index extends Common
             $this->assign('fenlei', $data);
             $this->assign('pages', $pages);
             $this->links();
-            $template = $this->receive();
+            $template = $this->checkc($this->receive());
             $this->assign('daohang1', Lang::get('Article list'));
             $this->unifiedAssignment();
             $this->assign('pageUrl', $this->getpage());
@@ -276,7 +243,7 @@ class Index extends Common
                 ->where('id', $id)
                 ->setInc('post_hits');
             $noArticle = false;
-            $data = Db::view('posts','id,post_author,post_keywords as guanjianzi,post_source as laiyuan,post_content as zhengwen,post_title as biaoti,post_excerpt as zhaiyao,post_status,comment_status,post_modified as fabushijian,post_type,comment_count as pinglunshu,thumbnail as suolvetu,post_hits as yuedu,post_like as zan')
+            $data = Db::view('posts','id,post_keywords as guanjianzi,post_source as laiyuan,post_content as zhengwen,post_title as biaoti,post_excerpt as zhaiyao,comment_status,post_modified as fabushijian,post_type,comment_count as pinglunshu,thumbnail as suolvetu,post_hits as yuedu,post_like as zan')
                 ->view('users','user_login as yonghu,user_nicename as nicheng,avatar as touxiang,sex as xingbie','users.id=posts.post_author')
                 ->where('posts.id',$id)
                 ->where('status','=',1)
@@ -285,22 +252,25 @@ class Index extends Common
                 'type' => '',
                 'pluginName' => ''
             ];
-            $ud = Session::get($this->session_prefix.'user_id');
-            if(!empty($data) && $ud != $data['post_author'] && $data['post_status'] == 2)
-            {
-                $data = null;
-            }
-            else
-            {
-                unset($data['post_author']);
-                unset($data['post_status']);
-            }
             $title_easy = '';
             if(!empty($data))
             {
-                if(isset($this->options_spare['timeFormat']) && !empty($this->options_spare['timeFormat']) && isset($data['fabushijian']))
+                if(isset($data['fabushijian']))
                 {
-                    $data['fabushijian'] = date($this->options_spare['timeFormat'],strtotime($data['fabushijian']));
+                    $tmptm = date('Y-m-d-H-i-s',strtotime($data['fabushijian']));
+                    $tmparr = explode('-',$tmptm);
+                    $data['date'] = [
+                        'nian' => $tmparr[0],
+                        'yue' => $tmparr[1],
+                        'ri' => $tmparr[2],
+                        'shi' => $tmparr[3],
+                        'fen' => $tmparr[4],
+                        'miao' => $tmparr[5],
+                    ];
+                    if(isset($this->options_spare['timeFormat']) && !empty($this->options_spare['timeFormat']))
+                    {
+                        $data['fabushijian'] = date($this->options_spare['timeFormat'],strtotime($data['fabushijian']));
+                    }
                 }
                 $param['type'] = $data['post_type'];
                 Hook::add('plugin_name',$this->plugins);
@@ -537,13 +507,11 @@ class Index extends Common
             $this->assign('next', $next);
             if(isset($data['comment_status']) && $data['comment_status'] == 1)
             {
-                $pinglun = Db::name('comments')
-                    ->alias('c')
-                    ->where('c.post_id','=',$id)
-                    ->where('c.status','=',1)
-                    ->order('c.createtime desc')
-                    ->join('users u','c.uid = u.id','LEFT')
-                    ->field('c.id,c.createtime as shijian,c.content as neirong,u.user_login,u.user_nicename as nicheng,u.user_email as email,u.user_url as url,u.avatar as touxiang,u.signature as qianming')
+                $pinglun = Db::view('comments','id,createtime as shijian,content as neirong')
+                    ->view('users','user_login as yonghu,user_nicename as nicheng,user_email as email,user_url as url,avatar as touxiang,signature as qianming','users.id=comments.uid')
+                    ->where('comments.post_id','=',$id)
+                    ->where('comments.status','=',1)
+                    ->order('comments.createtime desc')
                     ->paginate($this->everyPageShows);
                 $pages = $pinglun->render();
                 $pinglun = $pinglun->toArray();
@@ -559,12 +527,12 @@ class Index extends Common
             Hook::listen('close_comment',$closeComment,$this->ccc);
             $this->assign('closeComment', $closeComment);
             $yunxupinglun = 0;
-            if(isset($data['comment_status']) && $data['comment_status'] == 1)
+            if(isset($data['comment_status']) && $data['comment_status'] == 1 && $this->notAllowLogin != 1)
             {
                 $yunxupinglun = 1;
             }
             $this->assign('yunxupinglun', $yunxupinglun);
-            $template = $this->receive();
+            $template = $this->checkc($this->receive());
             $this->assign('title_easy', $title_easy);
             $this->unifiedAssignment('article');
             $guanjianzi = '';
@@ -592,12 +560,17 @@ class Index extends Common
                 $ud = end($udarr);
                 $udarr = explode('.',$ud);
                 array_pop($udarr);
+                $hz = 0;
+                if(isset($udarr[1]))
+                {
+                    $hz = $udarr[1];
+                }
                 if(!is_int($udarr[0]))
                 {
                     Hook::add('alias_category',$this->plugins);
                     Hook::listen('alias_category',$udarr[0],$this->ccc);
                 }
-                $this->menuPath($udarr[0],'category');
+                $this->menuPath($udarr[0],'category',$hz);
             }
             $this->assign('pageUrl', $this->getpage());
             $templateFile = 'article';
@@ -665,36 +638,34 @@ class Index extends Common
     public function pinglun()
     {
         $beipinglunren = Db::name('posts')->where('id',Request::instance()->post('id'))->field('post_author')->find();
-        $comment = Db::name('options')->where('option_name','comment')->field('option_value')->find();
-        $plzt = 1;
-        if($comment['option_value'] == 1)
+        if($beipinglunren['post_author'] != Session::get($this->session_prefix.'user_id'))
         {
-            $plzt = 0;
+            $comment = Db::name('options')->where('option_name','comment')->field('option_value')->find();
+            $plzt = 1;
+            if($comment['option_value'] == 1)
+            {
+                $plzt = 0;
+            }
+            $data = [
+                'post_id' => Request::instance()->post('id'),
+                'url' => 'index/Index/article/id/'.Request::instance()->post('id'),
+                'uid' => Session::get($this->session_prefix.'user_id'),
+                'to_uid' => $beipinglunren['post_author'],
+                'createtime' => date("Y-m-d H:i:s"),
+                'content' => $this->filterJs(Request::instance()->post('pinglun')),
+                'status' => $plzt
+            ];
+            Db::name('comments')->insert($data);
+            Db::name('posts')
+                ->where('id', Request::instance()->post('id'))
+                ->update([
+                    'post_comment' => date("Y-m-d H:i:s"),
+                    'comment_count' => ['exp','comment_count+1']
+                ]);
+            $param = '';
+            Hook::add('comment_post',$this->plugins);
+            Hook::listen('comment_post',$param,$this->ccc);
         }
-        $uid = 0;
-        if(Session::has($this->session_prefix.'user_id'))
-        {
-            $uid = Session::get($this->session_prefix.'user_id');
-        }
-        $data = [
-            'post_id' => Request::instance()->post('id'),
-            'url' => 'index/Index/article/id/'.Request::instance()->post('id'),
-            'uid' => $uid,
-            'to_uid' => $beipinglunren['post_author'],
-            'createtime' => date("Y-m-d H:i:s"),
-            'content' => $this->filterJs(Request::instance()->post('pinglun')),
-            'status' => $plzt
-        ];
-        Db::name('comments')->insert($data);
-        Db::name('posts')
-            ->where('id', Request::instance()->post('id'))
-            ->update([
-                'post_comment' => date("Y-m-d H:i:s"),
-                'comment_count' => ['exp','comment_count+1']
-            ]);
-        $param = '';
-        Hook::add('comment_post',$this->plugins);
-        Hook::listen('comment_post',$param,$this->ccc);
     }
     public function zan()
     {
@@ -762,6 +733,12 @@ class Index extends Common
         $param = '';
         Hook::add('view_post',$this->plugins);
         Hook::listen('view_post',$param,$this->ccc);
+        $hz = 0;
+        if(preg_match('/^(\S+)\.(\d+)$/i', $id, $matches))
+        {
+            $id = $matches[1];
+            $hz = $matches[2];
+        }
         if(!is_int($id))
         {
             Hook::add('alias_category',$this->plugins);
@@ -799,26 +776,40 @@ class Index extends Common
         ];
         Hook::add('order_category',$this->plugins);
         Hook::listen('order_category',$order,$this->ccc);
-        $this->menuPath($id,'category');
+        $this->menuPath($id,'category',$hz);
+        $termid = $id;
+        if(isset($this->options_spare['includeSubcategories']) && $this->options_spare['includeSubcategories'] == 1)
+        {
+            $subcategory = Cache::get('allsubcategories'.$id);
+            if($subcategory == false)
+            {
+                $subcategory = $this->allSubcategories($id);
+                Cache::set('allsubcategories'.$id,$subcategory,3600);
+            }
+            if(!empty($subcategory))
+            {
+                $termid .= ','.$subcategory;
+            }
+        }
         $page = 1;
         if(Request::instance()->has('page','get'))
         {
             $page = Request::instance()->get('page');
         }
-        $data = Cache::get('category'.$id.$page);
+        $data = Cache::get('category'.$termid.$page);
         if($data == false)
         {
             $data = Db::view('term_relationships','term_id')
                 ->view('posts','id,post_keywords as guanjianzi,post_title as biaoti,post_excerpt as zhaiyao,post_modified as fabushijian,post_type as type,comment_count as pinglunshu,thumbnail as suolvetu,post_hits as yuedu,post_like as zan','posts.id=term_relationships.object_id')
                 ->view('users','user_login as yonghu,user_nicename as nicheng,avatar as touxiang,sex as xingbie','users.id=posts.post_author')
-                ->where('term_id','=',$id)
+                ->where('term_id','in',$termid)
                 ->where('post_status','=',1)
                 ->where('post_type','in','0,2,3,4,5,6,7,8'.$type)
                 ->where('status','=',1)
                 ->where('post_date','<= time',date('Y-m-d H:i:s'))
                 ->order('istop desc,'.$order['name'].' '.$order['way'])
                 ->paginate($this->everyPageShows);
-            Cache::set('category'.$id.$page,$data,3600);
+            Cache::set('category'.$termid.$page,$data,3600);
         }
         $pages = $data->render();
         $pageArr = $data->toArray();
@@ -838,7 +829,45 @@ class Index extends Common
         $this->assign('pages', $pages);
         $this->assign('paging', $pageArr);
         $this->links();
-        $template = $this->receive();
+        $subclass = Cache::get('category_subclass'.$id);
+        if($subclass == false)
+        {
+            $subclass = [];
+            $zcaidan = Db::name('nav_cat')->where('active',1)->field('navcid')->find();
+            if(!empty($zcaidan))
+            {
+                if($hz == 0)
+                {
+                    $dcaidan = Db::name('nav')->where('cid',$zcaidan['navcid'])->where('href','/index/Index/category/id/'.$id)->where('parent_id',0)->where('status',1)->field('id')->find();
+                    $hz = $dcaidan['id'];
+                }
+                $subclass = Db::name('nav')->where('parent_id',$hz)->where('status',1)->where('href','like','%category%')->field('label,target,href,icon')->order('listorder asc')->select();
+                if(!empty($subclass))
+                {
+                    foreach($subclass as $key => $val)
+                    {
+                        $subclass[$key]['href'] = Url::build(str_replace(['/index/Index','/id'],'',$val['href']));
+                        $tmp = explode('/',rtrim($val['href'],'/'));
+                        $zid = end($tmp);
+                        $cdata = Db::view('term_relationships','term_id')
+                            ->view('posts','id,post_keywords as guanjianzi,post_title as biaoti,post_excerpt as zhaiyao,post_modified as fabushijian,post_type as type,comment_count as pinglunshu,thumbnail as suolvetu,post_hits as yuedu,post_like as zan','posts.id=term_relationships.object_id')
+                            ->view('users','user_login as yonghu,user_nicename as nicheng,avatar as touxiang,sex as xingbie','users.id=posts.post_author')
+                            ->where('term_id','=',$zid)
+                            ->where('post_status','=',1)
+                            ->where('post_type','in','0,2,3,4,5,6,7,8'.$type)
+                            ->where('status','=',1)
+                            ->where('post_date','<= time',date('Y-m-d H:i:s'))
+                            ->order('istop desc,'.$order['name'].' '.$order['way'])
+                            ->limit($this->everyPageShows)
+                            ->select();
+                        $subclass[$key]['list'] = $this->addArticleHref($cdata);
+                    }
+                }
+            }
+            Cache::set('category_subclass'.$id,$subclass,3600);
+        }
+        $this->assign('zilei', $subclass);
+        $template = $this->checkc($this->receive());
         $flm = '';
         if(isset($fenleiming['term_name']))
         {
@@ -865,6 +894,12 @@ class Index extends Common
     }
     public function page($id)
     {
+        $hz = 0;
+        if(preg_match('/^(\S+)\.(\d+)$/i', $id, $matches))
+        {
+            $id = $matches[1];
+            $hz = $matches[2];
+        }
         if(!is_int($id))
         {
             Hook::add('alias_page',$this->plugins);
@@ -912,25 +947,39 @@ class Index extends Common
             ];
             Hook::add('order_category',$this->plugins);
             Hook::listen('order_category',$order,$this->ccc);
+            $termid = $catid;
+            if(isset($this->options_spare['includeSubcategories']) && $this->options_spare['includeSubcategories'] == 1)
+            {
+                $subcategory = Cache::get('allsubcategories'.$catid);
+                if($subcategory == false)
+                {
+                    $subcategory = $this->allSubcategories($catid);
+                    Cache::set('allsubcategories'.$catid,$subcategory,3600);
+                }
+                if(!empty($subcategory))
+                {
+                    $termid .= ','.$subcategory;
+                }
+            }
             $page = 1;
             if(Request::instance()->has('page','get'))
             {
                 $page = Request::instance()->get('page');
             }
-            $cdata = Cache::get('category'.$catid.$page);
+            $cdata = Cache::get('category'.$termid.$page);
             if($cdata == false)
             {
                 $cdata = Db::view('term_relationships','term_id')
                     ->view('posts','id,post_keywords as guanjianzi,post_title as biaoti,post_excerpt as zhaiyao,post_modified as fabushijian,post_type as type,comment_count as pinglunshu,thumbnail as suolvetu,post_hits as yuedu,post_like as zan','posts.id=term_relationships.object_id')
                     ->view('users','user_login as yonghu,user_nicename as nicheng,avatar as touxiang,sex as xingbie','users.id=posts.post_author')
-                    ->where('term_id','=',$catid)
+                    ->where('term_id','in',$termid)
                     ->where('post_status','=',1)
                     ->where('post_type','in','0,2,3,4,5,6,7,8'.$type)
                     ->where('status','=',1)
                     ->where('post_date','<= time',date('Y-m-d H:i:s'))
                     ->order('istop desc,'.$order['name'].' '.$order['way'])
                     ->paginate($this->everyPageShows);
-                Cache::set('category'.$catid.$page,$cdata,3600);
+                Cache::set('category'.$termid.$page,$cdata,3600);
             }
             $pages = $cdata->render();
             $pageArr = $cdata->toArray();
@@ -1010,8 +1059,8 @@ class Index extends Common
         Hook::add('view_post',$this->plugins);
         Hook::listen('view_post',$param,$this->ccc);
         $this->links();
-        $this->menuPath($id,'page');
-        $template = $this->receive('page');
+        $this->menuPath($id,'page',$hz);
+        $template = $this->checkc($this->receive('page'));
         $this->unifiedAssignment('page');
         $this->assign('keyword', $data['guanjianzi']);
         $this->assign('description', $data['zhaiyao']);
@@ -1187,7 +1236,7 @@ class Index extends Common
         $this->assign('pages', $pages);
         $this->assign('paging', $pageArr);
         $this->links();
-        $template = $this->receive();
+        $template = $this->checkc($this->receive());
         $this->assign('daohang1', Lang::get('Search'));
         $this->unifiedAssignment();
         $this->assign('pageUrl', $this->getpage());
@@ -1246,7 +1295,7 @@ class Index extends Common
     }
     private function getpage()
     {
-        if($_SERVER['PHP_SELF'] == '/index.php')
+        if($_SERVER['REQUEST_URI'] == '/index.php')
         {
             $phpSelf = Url::build('/index');
             Hook::add('url_menu',$this->plugins);
@@ -1255,10 +1304,68 @@ class Index extends Common
         }
         else
         {
-            $phpSelf = str_replace('/index.php','',$_SERVER['PHP_SELF']);
+            $phpSelf = str_replace('/index.php','',$_SERVER['REQUEST_URI']);
             Hook::add('url_menu',$this->plugins);
             Hook::listen('url_menu',$phpSelf,$this->ccc);
             return $phpSelf;
+        }
+    }
+    public function cpage($name)
+    {
+        $cpage = [
+            'name' => $name,
+            'keyword' => '',
+            'description' => '',
+            'path' => '',
+            'view' => ''
+        ];
+        Hook::add('custom_page',$this->plugins);
+        Hook::listen('custom_page',$cpage,$this->ccc);
+        if(empty($cpage['path']) && empty($cpage['view']))
+        {
+            $this->redirect(Url::build('/error'));
+            exit;
+        }
+        else
+        {
+            $this->links();
+            $template = $this->checkc($this->receive('cpage'));
+            $this->assign('daohang', $this->pnavigation[$name]);
+            $this->assign('keyword', $cpage['keyword']);
+            $this->assign('description', $cpage['description']);
+            $this->assign('pageUrl', $this->getpage());
+            if(!empty($cpage['view']))
+            {
+                if(Request::instance()->isMobile() && is_file(APP_PATH.'../public/'.$template.'/mobile/header.html'))
+                {
+                    $this->assign('header', 'public/'.$template.'/mobile/header.html');
+                }
+                else
+                {
+                    $this->assign('header', 'public/'.$template.'/header.html');
+                }
+                if(Request::instance()->isMobile() && is_file(APP_PATH.'../public/'.$template.'/mobile/footer.html'))
+                {
+                    $this->assign('footer', 'public/'.$template.'/mobile/footer.html');
+                }
+                else
+                {
+                    $this->assign('footer', 'public/'.$template.'/footer.html');
+                }
+                $this->assign('cpage', $cpage['view']);
+                $view = $this->fetch();
+                return $view;
+            }
+            elseif(!empty($cpage['path']))
+            {
+                $path = str_replace('\\','/',$cpage['path']);
+                if(substr($path,0,1) == '/')
+                {
+                    $path = ltrim($path,'/');
+                }
+                $htmls = $this->fetch(APP_PATH.'plugins/'.$path);
+                return $htmls;
+            }
         }
     }
     public function sitemap()
@@ -1335,7 +1442,7 @@ class Index extends Common
         $str .= '</urlset>';
         file_put_contents(APP_PATH . '../sitemap.xml',$str);
         Lang::load(APP_PATH . '../public/common/html/sitemap/lang/'.$this->lang.'.php');
-        $template = $this->receive();
+        $template = $this->checkc($this->receive());
         if(Request::instance()->isMobile() && is_file(APP_PATH.'../public/'.$template.'/mobile/sitemap.html'))
         {
             $htmls = $this->fetch(APP_PATH.'../public/'.$template.'/mobile/sitemap.html');
@@ -1375,6 +1482,10 @@ class Index extends Common
     }
     public function rss()
     {
+        if(isset($this->options_spare['closeRSS']) && $this->options_spare['closeRSS'] == 1)
+        {
+            return $this->lost();
+        }
         $data_options = Cache::get('options');
         if($data_options == false)
         {

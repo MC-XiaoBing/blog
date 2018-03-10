@@ -9,8 +9,5 @@ return [
     'No search found' => '検索内容は見つかりませんでし',
     'Search' => 'サーチ',
     'Message content must be filled out' => 'メッセージの内容を記入する必要があります',
-    'The e-mail format is incorrect' => '電子メール形式が正しくありません',
-    'secrecy' => '秘密',
-    'male' => '男性',
-    'female' => '女性'
+    'The e-mail format is incorrect' => '電子メール形式が正しくありません'
 ];

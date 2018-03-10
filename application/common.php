@@ -49,6 +49,7 @@ use think\Route;
 Route::rule(['page','page/:id'],'index/Index/page');
 Route::rule(['article','article/:id'],'index/Index/article');
 Route::rule(['category','category/:id'],'index/Index/category');
+Route::rule(['cpage','cpage/:name'],'index/Index/cpage');
 Route::rule('search','index/Index/search');
 Route::rule('find/:word','index/Index/search');
 Route::rule('sitemap','index/Index/sitemap');

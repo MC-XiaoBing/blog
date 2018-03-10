@@ -9,8 +9,5 @@ return [
     'No search found' => 'Der inhalt nicht gefunden',
     'Search' => 'Suche',
     'Message content must be filled out' => 'Der Nachrichteninhalt muss ausgefüllt werden',
-    'The e-mail format is incorrect' => 'Das E-Mail-Format ist falsch',
-    'secrecy' => 'Vertraulichkeit',
-    'male' => 'Männlich',
-    'female' => 'Weiblich'
+    'The e-mail format is incorrect' => 'Das E-Mail-Format ist falsch'
 ];

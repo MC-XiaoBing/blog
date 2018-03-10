@@ -1,7 +1,8 @@
 <?php
 /**
- * Project: Catfish.
- * Author: A.J
+ * Project: Catfish CMS.
+ * Author: A.J <804644245@qq.com>
+ * Copyright: http://www.catfish-cms.com All rights reserved.
  * Date: 2016/11/30
  */
 return [
@@ -51,7 +52,7 @@ return [
     'Previous' => 'Zurück',
     'Installation will be completed, rest for a while now!' => 'Die Installation wird abgeschlossen sein, Rest für eine Weile jetzt!',
     'Congratulations! Installation has been completed!' => 'Herzlichen Glückwunsch, die Installation ist abgeschlossen!',
-    'Thank you for your support of the Catfish Blog system!' => 'Vielen Dank für Ihre Unterstützung des Catfish Blog Systems!',
+    'Thank you for your support of the Catfish CMS system!' => 'Vielen Dank für Ihre Unterstützung des Catfish CMS Systems!',
     'Is not still immersed in the installation of happiness, but the installation is over, then you will continue to use the site in the process of happiness, let us start!' => 'Ist noch nicht in die Installation des Glücks getaucht, aber die Installation ist vorbei, dann werden Sie weiterhin auf die Website in den Prozess des Glücks verwenden, lassen Sie uns anfangen!',
     'Enter the home page' => 'Startseite Zugang',
     'Into the background' => 'Access Management Seite',
@@ -73,8 +74,9 @@ return [
     'Email format is incorrect' => 'Das E-Mail-Format ist nicht korrekt',
     'The "Administrator Password" and "Confirm Password" must be the same' => '"Der administrator - passwort" und "passwort" identisch sein muss',
     'Database information error' => 'Datenbank - Informationen Fehler',
-    'Another Catfish Blog site' => 'Ein weiterer Catfish Blog Website',
-    'Catfish Blog' => 'Catfish Blog',
+    'Another Catfish CMS site' => 'Ein weiterer Catfish CMS Website',
+    'Catfish CMS' => 'Catfish CMS',
     'Installation completed' => 'Installation abgeschlossen',
-    'If you use an existing database, replace it with the actual database name' => 'Wenn Sie eine vorhandene Datenbank verwenden, ersetzen Sie sie durch den aktuellen Datenbanknamen'
+    'If you use an existing database, replace it with the actual database name' => 'Wenn Sie eine vorhandene Datenbank verwenden, ersetzen Sie sie durch den aktuellen Datenbanknamen',
+    'Bad database name' => 'Falscher Datenbankname'
 ];

@@ -1,6 +1,6 @@
 <?php
 /**
- * Project: Catfish Blog.
+ * Project: Catfish CMS.
  * Author: A.J <804644245@qq.com>
  * Copyright: http://www.catfish-cms.com All rights reserved.
  * Date: 2016/10/1
@@ -81,6 +81,13 @@ class Index extends Controller
                 $this->error($validate->getError());
                 return false;
             }
+            $loginError = Cache::get('loginError_'.$data['user']);
+            if($loginError)
+            {
+                Cache::set('loginError_'.$data['user'],'loginError',5);
+                $this->error(Lang::get('Password error'));
+                return false;
+            }
             $users = new Users();
             $user = $users->where('user_login', htmlspecialchars(Request::instance()->post('user')))
                 ->find();
@@ -91,6 +98,7 @@ class Index extends Controller
             }
             if($user['user_pass'] != md5(Request::instance()->post('pwd')))
             {
+                Cache::set('loginError_'.$data['user'],'loginError',5);
                 $this->error(Lang::get('Password error'));
                 return false;
             }
@@ -143,9 +151,13 @@ class Index extends Controller
             $view = $this->fetch();
             return $view;
         }
-        else
+        elseif(Session::get($this->session_prefix.'user_type') < 7)
         {
             $this->redirect(Url::build('/admin'));
+        }
+        else
+        {
+            $this->redirect(Url::build('/user'));
         }
     }
     public function denglu()
@@ -158,8 +170,15 @@ class Index extends Controller
         {
             return Lang::get('Password must be filled in');
         }
+        $userName = Request::instance()->post('user');
+        $loginError = Cache::get('loginError_'.$userName);
+        if($loginError)
+        {
+            Cache::set('loginError_'.$userName,'loginError',3);
+            return Lang::get('Password error');
+        }
         $users = new Users();
-        $user = $users->where('user_login', htmlspecialchars(Request::instance()->post('user')))
+        $user = $users->where('user_login', htmlspecialchars($userName))
             ->find();
         if(empty($user))
         {
@@ -167,6 +186,7 @@ class Index extends Controller
         }
         if($user['user_pass'] != md5(Request::instance()->post('pwd')))
         {
+            Cache::set('loginError_'.$userName,'loginError',3);
             return Lang::get('Password error');
         }
         if($user['user_status'] == 0)
@@ -349,7 +369,7 @@ class Index extends Controller
             Cache::set('options',$data_options,3600);
         }
         $version = Config::get('version');
-        $this->assign('catfish', '<a href="http://www.'.$version['official'].'/" target="_blank" id="catfish">'.$version['name'].' '.$version['description'].'</a>&nbsp;&nbsp;');
+        $this->assign('catfish', '<a href="http://www.'.$version['official'].'/" target="_blank" id="catfish">'.$version['name'].'&nbsp;'.$version['number'].'</a>&nbsp;&nbsp;');
         foreach($data_options as $key => $val)
         {
             if($val['option_name'] == 'copyright' || $val['option_name'] == 'statistics')

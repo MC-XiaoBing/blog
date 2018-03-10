@@ -9,6 +9,7 @@ namespace app\catfishajax\controller;
 use app\catfishajax\controller\Common;
 use think\Request;
 use think\Hook;
+use think\Url;
 
 class Index extends Common
 {
@@ -26,6 +27,11 @@ class Index extends Common
             {
                 echo $this->params['return'];
             }
+        }
+        else
+        {
+            $this->redirect(Url::build('/'));
+            exit();
         }
     }
 }

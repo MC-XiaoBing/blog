@@ -1,7 +1,8 @@
 <?php
 /**
- * Project: Catfish.
- * Author: A.J
+ * Project: Catfish CMS.
+ * Author: A.J <804644245@qq.com>
+ * Copyright: http://www.catfish-cms.com All rights reserved.
  * Date: 2016/11/29
  */
 return [
@@ -51,7 +52,7 @@ return [
     'Previous' => '前',
     'Installation will be completed, rest for a while now!' => '取り付け中、少々お待ち下さい！',
     'Congratulations! Installation has been completed!' => 'おめでとう、インストールは完了です！',
-    'Thank you for your support of the Catfish Blog system!' => 'Catfish Blog システムのご支援ありがとうございました！',
+    'Thank you for your support of the Catfish CMS system!' => 'Catfish CMS システムのご支援ありがとうございました！',
     'Is not still immersed in the installation of happiness, but the installation is over, then you will continue to use the site in the process of happiness, let us start!' => '幸福のインストールにまだ浸っていないが、インストールが終わった後、あなたは幸福の過程でサイトを使用し続ける、私たちを始めましょう！',
     'Enter the home page' => 'ホームページに入る',
     'Into the background' => '楽屋に入り',
@@ -73,8 +74,9 @@ return [
     'Email format is incorrect' => 'メール形式が正しくありません',
     'The "Administrator Password" and "Confirm Password" must be the same' => '管理者パスワードとパスワードの確認は同じでなければなりません',
     'Database information error' => 'データベース情報のエラー',
-    'Another Catfish Blog site' => 'また一つ Catfish Blog サイト',
-    'Catfish Blog' => 'Catfish Blog',
+    'Another Catfish CMS site' => 'また一つ Catfish CMS サイト',
+    'Catfish CMS' => 'Catfish CMS',
     'Installation completed' => '取り付けが終わり',
-    'If you use an existing database, replace it with the actual database name' => '既存のデータベースを使用する場合は、実際のデータベース名で置き換えます'
+    'If you use an existing database, replace it with the actual database name' => '既存のデータベースを使用する場合は、実際のデータベース名で置き換えます',
+    'Bad database name' => 'データベース名が正しくありません'
 ];

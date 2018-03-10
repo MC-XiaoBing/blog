@@ -9,8 +9,5 @@ return [
     'No search found' => 'не  найти  поиска контента',
     'Search' => 'поиск',
     'Message content must be filled out' => 'содержание сообщений,  должны заполнить',
-    'The e-mail format is incorrect' => 'Формат электронной почты неверен',
-    'secrecy' => 'Конфиденциальность',
-    'male' => 'мужчина',
-    'female' => 'женщина'
+    'The e-mail format is incorrect' => 'Формат электронной почты неверен'
 ];

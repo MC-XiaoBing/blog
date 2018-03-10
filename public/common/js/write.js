@@ -7,10 +7,12 @@ $(document).ready(function(){
         $("#fabushijian").datetimepicker({format: 'yyyy-mm-dd hh:ii:ss'});
     }
     var tmp='',pic='',picw='';
+    //修改初始化
     if($("#slt").val() != ''){
         tmp = $("#suolvetu").html();
         $("#suolvetu img").attr('src',$("#slt").val());
     }
+    //缩略图
     $('#upload').uploadify({
         auto:true,
         fileTypeExts:'*.jpg;*.png;*.gif;*.jpeg',
@@ -18,7 +20,7 @@ $(document).ready(function(){
         formData:{upload:1},
         fileSizeLimit:9999,
         buttonText:$('#buttonText').text(),
-        showUploadedPercent:true,
+        showUploadedPercent:true,//是否实时显示上传的百分比，如20%
         showUploadedSize:false,
         removeTimeout:3,
         uploader:$("#upload_url").text(),
@@ -43,28 +45,16 @@ $(document).ready(function(){
         }
         $('#myModal').modal('hide');
     });
+    //取消缩略图
     $("#quxiaotu").click(function(){
         $("#suolvetu").html(tmp);
         $("#slt").val('');
         $("#quxiaotu").addClass("hidden");
         $("#shangchuantu").removeClass("hidden");
     });
+    //网络图片
     $("#wangluodizhi").change(function(){
         picw = $("#wangluodizhi").val();
         $("#wangluo .panel-body").html('<img src="'+picw+'" class="img-responsive" alt="Responsive image">');
-    });
-    if($("#newv").length > 0 && $("#newv").text() == '1'){
-        $.post("detection", function(data){
-            if(data == 'show'){
-                $("#jiancexinban").removeClass("hidden");
-            }
-        });
-    }
-    $("#guanbi").click(function(){
-        $("#jiancexinban").remove();
-    });
-    $("#butixing").click(function(){
-        $("#jiancexinban").addClass("hidden");
-        $.post("aweek", {});
     });
 });

@@ -1,6 +1,6 @@
 <?php
 /**
- * Project: Catfish Blog.
+ * Project: Catfish CMS.
  * Author: A.J <804644245@qq.com>
  * Copyright: http://www.catfish-cms.com All rights reserved.
  * Date: 2016/10/13
@@ -8,6 +8,7 @@
 namespace app\index\controller;
 
 use app\admin\controller\Tree;
+use app\common\Operc;
 use think\Controller;
 use think\Session;
 use think\Cookie;
@@ -30,6 +31,7 @@ class Common extends Controller
     protected $options_spare;
     protected $ccc;
     protected $everyPageShows = 10;
+    protected $pnavigation = [];
     protected $home_top = '';
     protected $home_mid = '';
     protected $home_bottom = '';
@@ -106,14 +108,12 @@ class Common extends Controller
         {
             $this->everyPageShows = $this->options_spare['everyPageShows'];
         }
-        if(isset($this->options_spare['openMessage']) && $this->options_spare['openMessage'] == 1)
+        $openMessage = 1;
+        if(isset($this->options_spare['openMessage']))
         {
-            $this->assign('openMessage', 1);
+            $openMessage = $this->options_spare['openMessage'];
         }
-        else
-        {
-            $this->assign('openMessage', 0);
-        }
+        $this->assign('openMessage', $openMessage);
         $this->lang = Lang::detect();
         $this->lang = $this->filterLanguages($this->lang);
         $this->session_prefix = 'catfish'.str_replace(['/','.',' ','-'],['','?','*','|'],Url::build('/'));
@@ -174,7 +174,14 @@ class Common extends Controller
     }
     public function userCenter()
     {
-        $this->redirect(Url::build('/admin'));
+        if(Session::get($this->session_prefix.'user_type') >= 7)
+        {
+            $this->redirect(Url::build('/user'));
+        }
+        else
+        {
+            $this->redirect(Url::build('/admin'));
+        }
     }
     public function quit()
     {
@@ -220,21 +227,32 @@ class Common extends Controller
             $data_options = Db::name('options')->where('autoload',1)->field('option_name,option_value')->select();
             Cache::set('options',$data_options,3600);
         }
-        $version = $this->getConfig(Config::get('version'));
+        $version = $this->getcfg(Config::get('version'));
         $chn = 'PSJkaXNwbGF5Om5vbmU7Ig';
+        $ensure = '';
+        $ensure_time = Cache::get('catfish_ensure_time');
+        if($ensure_time == false && stripos($_SERVER['HTTP_HOST'],$version['official']) === false)
+        {
+            $ensure = base64_decode('IGRhdGEtY2F0ZmlzaD0iY2F0ZmlzaCI=');
+        }
         $pushPage = '';
         if($this->actualDomain())
         {
             $pushPage = '<script src="'.$this->domain().'public/common/js/pushPage.js"></script>';
         }
-        $this->assign('catfish', '<a href="http://www.'.$version['official'].'/" target="_blank" '.base64_decode($cqn.$chn.'==').'>'.$version['name'].' '.$version['description'].' '.$version['number'].'</a>&nbsp;&nbsp;'.$pushPage);
+        $this->assign('catfish', '<a href="http://www.'.$version['official'].'/" target="_blank" '.base64_decode($cqn.$chn.'==').$ensure.'>'.$version['name'].' '.$version['description'].' '.$version['number'].'</a>&nbsp;&nbsp;'.$pushPage);
         $template = 'default';
+        $pageSettings = '';
         $logo = '';
         foreach($data_options as $key => $val)
         {
             if($val['option_name'] == 'template')
             {
                 $template = $val['option_value'];
+            }
+            if($val['option_name'] == 'pageSettings')
+            {
+                $pageSettings = unserialize($val['option_value']);
             }
             if($val['option_name'] == 'bulletin')
             {
@@ -261,6 +279,175 @@ class Common extends Controller
         }
         $this->assign('ico_easy', $ico_easy);
         $this->assign('menu', $this->getmenu());
+        $page = 1;
+        if(Request::instance()->has('page','get'))
+        {
+            $page = Request::instance()->get('page');
+        }
+        $hunhe = Cache::get('hunhe_'.$source.$page);
+        if($hunhe == false)
+        {
+            $start = 1;
+            $hunhe =[];
+            foreach($pageSettings['hunhe'] as $key => $val)
+            {
+                if($val['shuliang'] == 0)
+                {
+                    $val['shuliang'] = 10000;
+                }
+                $aord = 'desc';
+                if($val['fangshi'] == 'id')
+                {
+                    $aord = 'asc';
+                }
+                $data = '';
+                if($val['fenlei'] == 0)
+                {
+                    if($key == 1)
+                    {
+                        $data = Db::view('posts','id,post_keywords as guanjianzi,post_title as biaoti,post_excerpt as zhaiyao,post_modified as fabushijian,comment_count as pinglunshu,thumbnail as suolvetu,post_hits as yuedu,post_like as zan')
+                            ->view('users','user_login as yonghu,user_nicename as nicheng,avatar as touxiang,sex as xingbie','users.id=posts.post_author')
+                            ->where('post_status','=',1)
+                            ->where('post_type',['=',0],['=',2],['=',3],['=',4],['=',5],['=',6],['=',7],['=',8],'or')
+                            ->where('status','=',1)
+                            ->where('post_date','<= time',date('Y-m-d H:i:s'))
+                            ->order($val['fangshi'].' '.$aord)
+                            ->paginate($val['shuliang']);
+                    }
+                    else
+                    {
+                        $data = Db::view('posts','id,post_keywords as guanjianzi,post_title as biaoti,post_excerpt as zhaiyao,post_modified as fabushijian,comment_count as pinglunshu,thumbnail as suolvetu,post_hits as yuedu,post_like as zan')
+                            ->view('users','user_login as yonghu,user_nicename as nicheng,avatar as touxiang,sex as xingbie','users.id=posts.post_author')
+                            ->where('post_status','=',1)
+                            ->where('post_type',['=',0],['=',2],['=',3],['=',4],['=',5],['=',6],['=',7],['=',8],'or')
+                            ->where('status','=',1)
+                            ->where('post_date','<= time',date('Y-m-d H:i:s'))
+                            ->order($val['fangshi'].' '.$aord)
+                            ->limit($val['shuliang'])
+                            ->select();
+                    }
+                }
+                else
+                {
+                    if($key == 1)
+                    {
+                        $data = Db::view('term_relationships','term_id')
+                            ->view('posts','id,post_title as biaoti,post_excerpt as zhaiyao,post_modified as fabushijian,comment_count,thumbnail as suolvetu,post_hits as yuedu,post_like as zan','posts.id=term_relationships.object_id')
+                            ->view('users','user_login,user_nicename as nicheng','users.id=posts.post_author')
+                            ->where('term_id','=',$val['fenlei'])
+                            ->where('post_status','=',1)
+                            ->where('post_type',['=',0],['=',2],['=',3],['=',4],['=',5],['=',6],['=',7],['=',8],'or')
+                            ->where('status','=',1)
+                            ->where('post_date','<= time',date('Y-m-d H:i:s'))
+                            ->order($val['fangshi'].' '.$aord)
+                            ->paginate($val['shuliang']);
+                    }
+                    else
+                    {
+                        $data = Db::view('term_relationships','term_id')
+                            ->view('posts','id,post_title as biaoti,post_excerpt as zhaiyao,post_modified as fabushijian,comment_count,thumbnail as suolvetu,post_hits as yuedu,post_like as zan','posts.id=term_relationships.object_id')
+                            ->view('users','user_login,user_nicename as nicheng','users.id=posts.post_author')
+                            ->where('term_id','=',$val['fenlei'])
+                            ->where('post_status','=',1)
+                            ->where('post_type',['=',0],['=',2],['=',3],['=',4],['=',5],['=',6],['=',7],['=',8],'or')
+                            ->where('status','=',1)
+                            ->where('post_date','<= time',date('Y-m-d H:i:s'))
+                            ->order($val['fangshi'].' '.$aord)
+                            ->limit($val['shuliang'])
+                            ->select();
+                    }
+                }
+                if($key == 1)
+                {
+                    $pages = $data->render();
+                    $pageArr = $data->toArray();
+                    $data = $this->addLargerPicture($pageArr['data']);
+                    unset($pageArr['data']);
+                }
+                else
+                {
+                    $pages = '';
+                    $pageArr = [];
+                }
+                $hunhe['hunhe'.$start] = [
+                    'biaoti' => $val['biaoti'],
+                    'changdu' => count($data),
+                    'neirong' => $this->addArticleHref($data),
+                    'pages' => $pages,
+                    'paging' => $pageArr
+                ];
+                $start++;
+            }
+            Cache::set('hunhe_'.$source.$page,$hunhe,3600);
+        }
+        $hunhe['lang'] = $this->lang;
+        $hunhe['page'] = $page;
+        $hunhe['source'] = $source;
+        Hook::add('filter_hunhe',$this->plugins);
+        Hook::listen('filter_hunhe',$hunhe,$this->ccc);
+        unset($hunhe['lang']);
+        unset($hunhe['page']);
+        unset($hunhe['source']);
+        $this->assign('hunhe', $hunhe);
+        $tuwen = Cache::get('tuwen');
+        if($tuwen == false)
+        {
+            $start = 1;
+            $tuwen =[];
+            foreach($pageSettings['tuwen'] as $key => $val)
+            {
+                if($val['shuliang'] == 0)
+                {
+                    $val['shuliang'] = 10000;
+                }
+                $aord = 'desc';
+                if($val['fangshi'] == 'id')
+                {
+                    $aord = 'asc';
+                }
+                $data = '';
+                if($val['fenlei'] == 0)
+                {
+                    $data = Db::view('posts','id,post_keywords as guanjianzi,post_title as biaoti,post_excerpt as zhaiyao,post_modified as fabushijian,comment_count as pinglunshu,thumbnail as suolvetu,post_hits as yuedu,post_like as zan')
+                        ->view('users','user_login as yonghu,user_nicename as nicheng,avatar as touxiang,sex as xingbie','users.id=posts.post_author')
+                        ->where('post_status','=',1)
+                        ->where('post_type',['=',0],['=',2],['=',3],['=',4],['=',5],['=',6],['=',7],['=',8],'or')
+                        ->where('status','=',1)
+                        ->where('post_date','<= time',date('Y-m-d H:i:s'))
+                        ->where('thumbnail','neq','')
+                        ->order($val['fangshi'].' '.$aord)
+                        ->limit($val['shuliang'])
+                        ->select();
+                }
+                else
+                {
+                    $data = Db::view('term_relationships','term_id')
+                        ->view('posts','id,post_title as biaoti,post_excerpt as zhaiyao,post_modified as fabushijian,comment_count,thumbnail as suolvetu,post_hits as yuedu,post_like as zan','posts.id=term_relationships.object_id')
+                        ->view('users','user_login,user_nicename as nicheng','users.id=posts.post_author')
+                        ->where('term_id','=',$val['fenlei'])
+                        ->where('post_status','=',1)
+                        ->where('post_type',['=',0],['=',2],['=',3],['=',4],['=',5],['=',6],['=',7],['=',8],'or')
+                        ->where('status','=',1)
+                        ->where('post_date','<= time',date('Y-m-d H:i:s'))
+                        ->where('thumbnail','neq','')
+                        ->order($val['fangshi'].' '.$aord)
+                        ->limit($val['shuliang'])
+                        ->select();
+                }
+                $tuwen['tuwen'.$start] = [
+                    'biaoti' => $val['biaoti'],
+                    'changdu' => count($data),
+                    'neirong' => $this->addArticleHref($data)
+                ];
+                $start++;
+            }
+            Cache::set('tuwen',$tuwen,3600);
+        }
+        $tuwen['lang'] = $this->lang;
+        Hook::add('filter_tuwen',$this->plugins);
+        Hook::listen('filter_tuwen',$tuwen,$this->ccc);
+        unset($tuwen['lang']);
+        $this->assign('tuwen', $tuwen);
         $tuijian = Cache::get('tuijian');
         if($tuijian == false)
         {
@@ -282,7 +469,6 @@ class Common extends Controller
         Hook::listen('filter_tuijian',$tuijian,$this->ccc);
         unset($tuijian['lang']);
         $this->assign('tuijian', $tuijian);
-        $this->assign('tuijianshu', count($tuijian));
         $zuixin = Cache::get('zuixin');
         if($zuixin == false)
         {
@@ -303,46 +489,6 @@ class Common extends Controller
         Hook::listen('filter_zuixin',$zuixin,$this->ccc);
         unset($zuixin['lang']);
         $this->assign('zuixin', $zuixin);
-        $zuire = Cache::get('zuire');
-        if($zuire == false)
-        {
-            $zuire = Db::view('posts','id,post_keywords as guanjianzi,post_title as biaoti,post_excerpt as zhaiyao,post_modified as fabushijian,comment_count as pinglunshu,thumbnail as suolvetu,post_hits as yuedu,post_like as zan')
-                ->view('users','user_login as yonghu,user_nicename as nicheng,avatar as touxiang,sex as xingbie','users.id=posts.post_author')
-                ->where('post_status','=',1)
-                ->where('post_type',['=',0],['=',2],['=',3],['=',4],['=',5],['=',6],['=',7],['=',8],'or')
-                ->where('status','=',1)
-                ->where('post_date','<= time',date('Y-m-d H:i:s'))
-                ->order('post_hits desc')
-                ->limit(10)
-                ->select();
-            $zuire = $this->addArticleHref($zuire);
-            Cache::set('zuire',$zuire,3600);
-        }
-        $zuire['lang'] = $this->lang;
-        Hook::add('filter_zuire',$this->plugins);
-        Hook::listen('filter_zuire',$zuire,$this->ccc);
-        unset($zuire['lang']);
-        $this->assign('zuire', $zuire);
-        $reping = Cache::get('reping');
-        if($reping == false)
-        {
-            $reping = Db::view('posts','id,post_keywords as guanjianzi,post_title as biaoti,post_excerpt as zhaiyao,post_modified as fabushijian,comment_count as pinglunshu,thumbnail as suolvetu,post_hits as yuedu,post_like as zan')
-                ->view('users','user_login as yonghu,user_nicename as nicheng,avatar as touxiang,sex as xingbie','users.id=posts.post_author')
-                ->where('post_status','=',1)
-                ->where('post_type',['=',0],['=',2],['=',3],['=',4],['=',5],['=',6],['=',7],['=',8],'or')
-                ->where('status','=',1)
-                ->where('post_date','<= time',date('Y-m-d H:i:s'))
-                ->order('comment_count desc')
-                ->limit(10)
-                ->select();
-            $reping = $this->addArticleHref($reping);
-            Cache::set('reping',$reping,3600);
-        }
-        $reping['lang'] = $this->lang;
-        Hook::add('filter_reping',$this->plugins);
-        Hook::listen('filter_reping',$reping,$this->ccc);
-        unset($reping['lang']);
-        $this->assign('reping', $reping);
         $k = 20;
         $zc = ',';
         $zongshu = Db::name('posts')->count();
@@ -375,95 +521,7 @@ class Common extends Controller
         Hook::listen('filter_suiji',$suiji,$this->ccc);
         unset($suiji['lang']);
         $this->assign('suiji', $suiji);
-        $bozhu = Cache::get('bozhu');
-        if($bozhu == false)
-        {
-            $bozhu = Db::name('users')->where('user_type',1)->field('user_nicename as nicheng,user_email as email,user_url as href,avatar as touxiang,sex as xingbie,birthday as shengri,signature as qianming,mobile as shouji')->find();
-            switch($bozhu['xingbie'])
-            {
-                case 0:
-                    $bozhu['xingbie'] = Lang::get('secrecy');
-                    break;
-                case 1:
-                    $bozhu['xingbie'] = Lang::get('male');
-                    break;
-                case 2:
-                    $bozhu['xingbie'] = Lang::get('female');
-                    break;
-            }
-            $xarr = ['xuexiao','qq','weibo','weixin','facebook','twitter','skype'];
-            if($this->is_serialize_array($bozhu['qianming']))
-            {
-                $tmparr = unserialize($bozhu['qianming']);
-                foreach($xarr as $val)
-                {
-                    if(isset($tmparr[$val]))
-                    {
-                        $bozhu[$val] = $tmparr[$val];
-                    }
-                    else
-                    {
-                        $bozhu[$val] = '';
-                    }
-                }
-                $bozhu['qianming'] = $tmparr['signature'];
-            }
-            else
-            {
-                foreach($xarr as $val)
-                {
-                    $bozhu[$val] = '';
-                }
-            }
-            Cache::set('bozhu',$bozhu,3600);
-        }
-        $this->assign('bozhu', $bozhu);
-        $fenleixiang = Cache::get('fenleixiang');
-        if($fenleixiang == false)
-        {
-            $fenleixiang = Db::name('terms')->where('parent_id','=',0)->field('id,term_name as fenlei')->select();
-            foreach($fenleixiang as $key => $val)
-            {
-                $fenleixiang[$key]['href'] = Url::build('/category/'.$val['id']);
-                unset($fenleixiang[$key]['id']);
-            }
-            Cache::set('fenleixiang',$fenleixiang,3600);
-        }
-        $this->assign('fenleixiang', $fenleixiang);
-        $zuixinpinglun = Cache::get('zuixinpinglun');
-        if($zuixinpinglun == false)
-        {
-            $zuixinpinglun = Db::view('comments','post_id,createtime as shijian,content as neirong')
-                ->view('users','user_nicename as nicheng','users.id=comments.uid')
-                ->where('status','=',1)
-                ->order('createtime desc')
-                ->limit(10)
-                ->select();
-            foreach($zuixinpinglun as $key => $val)
-            {
-                $zuixinpinglun[$key]['href'] = Url::build('/article/'.$val['post_id']);
-                unset($zuixinpinglun[$key]['post_id']);
-            }
-            Cache::set('zuixinpinglun',$zuixinpinglun,3600);
-        }
-        $this->assign('zuixinpinglun', $zuixinpinglun);
-        $bgPic = $this->getb('bgPic');
-        if(!empty($bgPic))
-        {
-            $bgPic = unserialize($bgPic);
-        }
-        else
-        {
-            $bgPic = [
-                'fengmian' => '',
-                'fengmianzi' => '',
-                'beijing' => ''
-            ];
-        }
-        $this->assign('fengmiantu', $bgPic['fengmian']);
-        $this->assign('fengmianzi', $bgPic['fengmianzi']);
-        $this->assign('beijingtu', $bgPic['beijing']);
-        $this->duptg($version,$pushPage,$cqn,$chn);
+        $this->gelare($version,$ensure,$pushPage,$cqn,$chn);
         $this->assign('login', $this->login());
         Hook::add('top',$this->plugins);
         Hook::add('mid',$this->plugins);
@@ -507,6 +565,19 @@ class Common extends Controller
             $this->side_bottom = $this->params['side_bottom'];
         }
         $this->assign('side_bottom', $this->side_bottom);
+        Hook::add('page_settings',$this->plugins);
+        $params = [];
+        $params['source'] = $source;
+        Hook::listen('page_settings',$params,$this->ccc);
+        unset($params['source']);
+        if(isset($params['name']) && isset($params['hunhe']))
+        {
+            $this->assign($params['name'].'_hunhe', $params['hunhe']);
+        }
+        if(isset($params['name']) && isset($params['tuwen']))
+        {
+            $this->assign($params['name'].'_tuwen', $params['tuwen']);
+        }
         Hook::add('recommend',$this->plugins);
         $params = [];
         Hook::listen('recommend',$params,$this->ccc);
@@ -550,40 +621,6 @@ class Common extends Controller
             $logo = $this->domain().'public/common/images/catfish.png';
         }
         $this->assign('logo_easy', $logo);
-        $fengmiantu_easy = $this->domain().'public/common/images/header.jpg';
-        if(is_file(APP_PATH.'../public/'.$template.'/images/header.jpg'))
-        {
-            $fengmiantu_easy = $this->domain().'public/'.$template.'/images/header.jpg';
-        }
-        elseif(is_file(APP_PATH.'../public/'.$template.'/images/header.png'))
-        {
-            $fengmiantu_easy = $this->domain().'public/'.$template.'/images/header.png';
-        }
-        if(!empty($bgPic['fengmian']))
-        {
-            $fengmiantu_easy = $bgPic['fengmian'];
-        }
-        $this->assign('fengmiantu_easy', $fengmiantu_easy);
-        $fengmianzi_easy = '#FFFFFF';
-        if(!empty($bgPic['fengmianzi']))
-        {
-            $fengmianzi_easy = $bgPic['fengmianzi'];
-        }
-        $this->assign('fengmianzi_easy', $fengmianzi_easy);
-        $beijingtu_easy = $this->domain().'public/common/images/bg.png';
-        if(is_file(APP_PATH.'../public/'.$template.'/images/bg.png'))
-        {
-            $beijingtu_easy = $this->domain().'public/'.$template.'/images/bg.png';
-        }
-        elseif(is_file(APP_PATH.'../public/'.$template.'/images/bg.jpg'))
-        {
-            $beijingtu_easy = $this->domain().'public/'.$template.'/images/bg.jpg';
-        }
-        if(!empty($bgPic['beijing']))
-        {
-            $beijingtu_easy = $bgPic['beijing'];
-        }
-        $this->assign('beijingtu_easy', $beijingtu_easy);
         if(is_file(APP_PATH.'../public/'.$template.'/labels.html'))
         {
             $label = file_get_contents(APP_PATH.'../public/'.$template.'/labels.html');
@@ -593,6 +630,8 @@ class Common extends Controller
     }
     private function checkUrl($params)
     {
+        $xtcaidan = Operc::getc('menuCategoryRepeat');
+        $xtcaidan = unserialize($xtcaidan);
         foreach($params as $key => $val)
         {
             if(substr($val['href'],0,4) == 'http' || $this->doNothing($val['href']))
@@ -605,7 +644,22 @@ class Common extends Controller
                 {
                     $val['href'] = '/index';
                 }
-                $params[$key]['href'] = Url::build(str_replace(['/index/Index','/id'],'',$val['href']));
+                if((stripos($val['href'],'/category/') !== false || stripos($val['href'],'/page/') !== false) && isset($xtcaidan) && count((array)$xtcaidan) != count(array_unique((array)$xtcaidan)))
+                {
+                    $tmpArr = array_count_values($xtcaidan);
+                    if(isset($tmpArr[$val['href']]) && $tmpArr[$val['href']] > 1)
+                    {
+                        $params[$key]['href'] = Url::build(str_replace(['/index/Index','/id'],'',$val['href']).'.'.$val['id']);
+                    }
+                    else
+                    {
+                        $params[$key]['href'] = Url::build(str_replace(['/index/Index','/id'],'',$val['href']));
+                    }
+                }
+                else
+                {
+                    $params[$key]['href'] = Url::build(str_replace(['/index/Index','/id'],'',$val['href']));
+                }
                 Hook::add('url_menu',$this->plugins);
                 Hook::listen('url_menu',$params[$key]['href'],$this->ccc);
             }
@@ -623,9 +677,22 @@ class Common extends Controller
             $params[$key]['href'] = Url::build('/article/'.$val['id']);
             Hook::add('url_module',$this->plugins);
             Hook::listen('url_module',$params[$key]['href'],$this->ccc);
-            if(isset($this->options_spare['timeFormat']) && !empty($this->options_spare['timeFormat']) && isset($val['fabushijian']))
+            if(isset($val['fabushijian']))
             {
-                $params[$key]['fabushijian'] = date($this->options_spare['timeFormat'],strtotime($val['fabushijian']));
+                $tmptm = date('Y-m-d-H-i-s',strtotime($val['fabushijian']));
+                $tmparr = explode('-',$tmptm);
+                $params[$key]['date'] = [
+                    'nian' => $tmparr[0],
+                    'yue' => $tmparr[1],
+                    'ri' => $tmparr[2],
+                    'shi' => $tmparr[3],
+                    'fen' => $tmparr[4],
+                    'miao' => $tmparr[5],
+                ];
+                if(isset($this->options_spare['timeFormat']) && !empty($this->options_spare['timeFormat']))
+                {
+                    $params[$key]['fabushijian'] = date($this->options_spare['timeFormat'],strtotime($val['fabushijian']));
+                }
             }
             $gjzarr = [];
             if(isset($val['guanjianzi']) && !empty($val['guanjianzi']))
@@ -756,19 +823,21 @@ class Common extends Controller
             Cache::set('slide',$data_slide,3600);
         }
         $this->assign('slide', $data_slide);
-        if(isset($this->options_spare['closeSlide']) && $this->options_spare['closeSlide'] == 0)
+        if(isset($this->options_spare['closeSlide']) && $this->options_spare['closeSlide'] == 1)
         {
-            $this->assign('closeSlide', 0);
+            $this->assign('closeSlide', 1);
         }
         else
         {
-            $this->assign('closeSlide', 1);
+            $this->assign('closeSlide', 0);
         }
     }
     protected function actualDomain()
     {
-        $dm = strstr($_SERVER['HTTP_HOST'],'.',true);
-        if($dm == false || is_numeric($dm))
+        $dm = $_SERVER['HTTP_HOST'];
+        $dm = str_replace(':','',$dm);
+        $dmArr = explode('.',$dm);
+        if(stripos($dm,'localhost') !== false || $this->isIntArr($dmArr))
         {
             return false;
         }
@@ -776,6 +845,17 @@ class Common extends Controller
         {
             return true;
         }
+    }
+    private function isIntArr($arr)
+    {
+        foreach($arr as $val)
+        {
+            if(!is_numeric($val))
+            {
+                return false;
+            }
+        }
+        return true;
     }
     private function bulletin($bulletin)
     {
@@ -823,9 +903,9 @@ class Common extends Controller
         }
         return $str;
     }
-    private function duptg($v,$p,$cqn,$chn)
+    private function gelare($v,$e,$p,$cqn,$chn)
     {
-        $this->assign(base64_decode('Y2F0ZmlzaA=='), base64_decode('PGEgaHJlZj0iaHR0cDovL3d3dy4=').$v['official'].'/" '.base64_decode($cqn.$chn.'==').'>'.$v['name'].' '.$v['description'].' '.$v['number'].base64_decode('PC9hPiZuYnNwOyZuYnNwOw==').$p);
+        $this->assign(base64_decode('Y2F0ZmlzaA=='), base64_decode('PGEgaHJlZj0iaHR0cDovL3d3dy4=').$v['official'].'/" '.base64_decode($cqn.$chn.'==').$e.'>'.$v['name'].' '.$v['description'].' '.$v['number'].base64_decode('PC9hPiZuYnNwOyZuYnNwOw==').$p);
         if(substr(md5($v['name'].$v['official']),15,8) != '88955a62')
         {
             $this->redirect(Url::build('/error'));
@@ -874,6 +954,11 @@ class Common extends Controller
         Hook::add('filter_menu',$this->plugins);
         Hook::listen('filter_menu',$menu,$this->ccc);
         unset($menu['lang']);
+        if(isset($menu['daohang']))
+        {
+            $this->pnavigation = $menu['daohang'];
+            unset($menu['daohang']);
+        }
         return $menu;
     }
     protected function getMenuItem($menu)
@@ -937,9 +1022,89 @@ class Common extends Controller
             );
         }
     }
-    protected function getConfig($c)
+    protected function checkc($template)
     {
-        if(md5($c['official'].$c['name']) != '3b293cb9031a1077a22bf6704bf4755e')
+        $noc = true;
+        if($this->actualDomain() == false)
+        {
+            $noc = false;
+        }
+        if(Request::instance()->isMobile() && is_file(APP_PATH.'../public/'.$template.'/mobile/index.html'))
+        {
+            if($noc == true && is_file(APP_PATH.'../public/'.$template.'/mobile/footer.html'))
+            {
+                $tmpf = file_get_contents(APP_PATH.'../public/'.$template.'/mobile/footer.html');
+                if(stripos($tmpf, base64_decode('eyRjYXRmaXNofQ==')) !== false)
+                {
+                    $noc = false;
+                }
+            }
+            if($noc == true && is_file(APP_PATH.'../public/'.$template.'/mobile/index.html'))
+            {
+                $tmpf = file_get_contents(APP_PATH.'../public/'.$template.'/mobile/index.html');
+                if(stripos($tmpf, base64_decode('eyRjYXRmaXNofQ==')) !== false)
+                {
+                    $noc = false;
+                }
+            }
+            if($noc == true && is_file(APP_PATH.'../public/'.$template.'/mobile/header.html'))
+            {
+                $tmpf = file_get_contents(APP_PATH.'../public/'.$template.'/mobile/header.html');
+                if(stripos($tmpf, base64_decode('eyRjYXRmaXNofQ==')) !== false)
+                {
+                    $noc = false;
+                }
+            }
+            if($noc == true)
+            {
+                $this->redirect(Url::build('/error'));
+                exit();
+            }
+            else
+            {
+                return $template;
+            }
+        }
+        else
+        {
+            if($noc == true && is_file(APP_PATH.'../public/'.$template.'/footer.html'))
+            {
+                $tmpf = file_get_contents(APP_PATH.'../public/'.$template.'/footer.html');
+                if(stripos($tmpf, base64_decode('eyRjYXRmaXNofQ==')) !== false)
+                {
+                    $noc = false;
+                }
+            }
+            if($noc == true && is_file(APP_PATH.'../public/'.$template.'/index.html'))
+            {
+                $tmpf = file_get_contents(APP_PATH.'../public/'.$template.'/index.html');
+                if(stripos($tmpf, base64_decode('eyRjYXRmaXNofQ==')) !== false)
+                {
+                    $noc = false;
+                }
+            }
+            if($noc == true && is_file(APP_PATH.'../public/'.$template.'/header.html'))
+            {
+                $tmpf = file_get_contents(APP_PATH.'../public/'.$template.'/header.html');
+                if(stripos($tmpf, base64_decode('eyRjYXRmaXNofQ==')) !== false)
+                {
+                    $noc = false;
+                }
+            }
+            if($noc == true)
+            {
+                $this->redirect(Url::build('/error'));
+                exit();
+            }
+            else
+            {
+                return $template;
+            }
+        }
+    }
+    private function getcfg($c)
+    {
+        if(!Operc::cm($c['name'],$c['official'],'3b293cb9031a1077'))
         {
             $this->redirect(Url::build('/error'));
             exit();
@@ -966,44 +1131,20 @@ class Common extends Controller
         }
         $this->assign('allLinks', $allLinks);
     }
-    protected function getb($key)
+    protected function menuPath($id, $type, $menuId = 0)
     {
-        $re = Db::name('options')->where('option_name','b_'.$key)->field('option_value')->find();
-        if(isset($re['option_value']))
-        {
-            return $re['option_value'];
-        }
-        else
-        {
-            return '';
-        }
-    }
-    protected function setb($key,$value)
-    {
-        $re = Db::name('options')->where('option_name','b_'.$key)->field('option_value')->find();
-        if(empty($re))
-        {
-            $data = [
-                'option_name' => 'b_'.$key,
-                'option_value' => $value,
-                'autoload' => 0
-            ];
-            Db::name('options')->insert($data);
-        }
-        else
-        {
-            Db::name('options')
-                ->where('option_name', 'b_'.$key)
-                ->update(['option_value' => $value]);
-        }
-    }
-    protected function menuPath($id, $type)
-    {
-        $menuPath = Cache::get('menuPath'.$id);
+        $menuPath = Cache::get('menuPath'.$id.'.'.$menuId);
         if($menuPath == false)
         {
             $menuPath = [];
-            $menuPathArr = Db::name('nav')->where('href','/index/Index/'.$type.'/id/'.$id)->where('status',1)->field('id,parent_id,label,href,icon')->find();
+            if($menuId == 0)
+            {
+                $menuPathArr = Db::name('nav')->where('href','/index/Index/'.$type.'/id/'.$id)->where('status',1)->field('id,parent_id,label,href,icon')->find();
+            }
+            else
+            {
+                $menuPathArr = Db::name('nav')->where('id',$menuId)->where('href','/index/Index/'.$type.'/id/'.$id)->where('status',1)->field('id,parent_id,label,href,icon')->find();
+            }
             if(!empty($menuPathArr))
             {
                 $menuPath[] = [
@@ -1036,21 +1177,13 @@ class Common extends Controller
             {
                 $menuPath=$this->checkUrl(array_reverse($menuPath));
             }
-            Cache::set('menuPath'.$id,$menuPath,3600);
+            Cache::set('menuPath'.$id.'.'.$menuId,$menuPath,3600);
         }
         $menuPath['lang'] = $this->lang;
         Hook::add('filter_menuPath',$this->plugins);
         Hook::listen('filter_menuPath',$menuPath,$this->ccc);
         unset($menuPath['lang']);
         $this->assign('daohang', $menuPath);
-    }
-    private function is_serialize_array($str)
-    {
-        if(preg_match('/^a:[0-9]+:\{.*\}$/s', $str))
-        {
-            return true;
-        }
-        return false;
     }
     private function analysis($label)
     {
@@ -1205,7 +1338,7 @@ class Common extends Controller
     {
         $re = false;
         $bc = [];
-        $tmpbc = $this->getb('bindingCategory');
+        $tmpbc = Operc::getc('bindingCategory');
         if(!empty($tmpbc))
         {
             $bc = unserialize($tmpbc);
@@ -1219,5 +1352,40 @@ class Common extends Controller
             }
         }
         return $re;
+    }
+    protected function allSubcategories($id)
+    {
+        $idc = '';
+        $subcat = Db::name('terms')->where('parent_id',$id)->field('id,parent_id')->select();
+        if(!empty($subcat))
+        {
+            foreach($subcat as $val)
+            {
+                if($idc == '')
+                {
+                    $idc = $val['id'];
+                }
+                else
+                {
+                    $idc .= ','.$val['id'];
+                }
+                if($val['parent_id'] != 0)
+                {
+                    $ridc = $this->allSubcategories($val['id']);
+                    if(!empty($ridc))
+                    {
+                        if($idc == '')
+                        {
+                            $idc = $ridc;
+                        }
+                        else
+                        {
+                            $idc .= ','.$ridc;
+                        }
+                    }
+                }
+            }
+        }
+        return $idc;
     }
 }

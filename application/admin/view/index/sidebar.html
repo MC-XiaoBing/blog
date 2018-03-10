@@ -1,7 +1,6 @@
 <div class="col-xs-12 col-sm-3 col-md-2">
-    <div class="collapse navbar-collapse" style="position: fixed; top: 51px; bottom: 0; padding-top: 10px; z-index: 1000; background-color:#96b7e0; color: #DDDDDD;" id="bs-example-js-navbar-collapse">
+    <div class="collapse navbar-collapse" style="position: fixed; top: 51px; bottom: 0; padding-top: 10px; z-index: 1000; background-color:#eee;" id="bs-example-js-navbar-collapse">
         <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
-            {if condition="$permissions < 7"}
             <div class="panel panel-default">
                 <div class="panel-heading" role="tab" id="heading_nr">
                     <h4 class="panel-title">
@@ -38,9 +37,11 @@
                                 {:lang('All comments')}
                             </button>
                         </a>
-                        <a href="{:Url('/admin/Index/simiwz')}">
-                            <button type="button" class="btn btn-default btn-block{eq name="option" value="simiwz"} btn-primary{/eq}">
-                                {:lang('Private article')}
+                        {/if}
+                        {if condition="$permissions < 5"}
+                        <a href="{:Url('/admin/Index/messages')}">
+                            <button type="button" class="btn btn-default btn-block{eq name="option" value="messages"} btn-primary{/eq}">
+                                {:lang('All messages')}
                             </button>
                         </a>
                         {/if}
@@ -52,7 +53,6 @@
                     </div>
                 </div>
             </div>
-            {/if}
             {if condition="$permissions < 5"}
             <div class="panel panel-default">
                 <div class="panel-heading" role="tab" id="heading_ym">
@@ -74,7 +74,11 @@
                             {:lang('All pages')}
                             </button>
                         </a>
-                        {if condition="$closeSlide eq 0"}
+                        <a href="{:Url('/admin/Index/pageSettings')}">
+                            <button type="button" class="btn btn-default btn-block{eq name="option" value="pageSettings"} btn-primary{/eq}">
+                            {:lang('Page settings')}
+                            </button>
+                        </a>
                         <a href="{:Url('/admin/Index/addSlideshow')}">
                             <button type="button" class="btn btn-default btn-block{eq name="option" value="addSlideshow"} btn-primary{/eq}">
                             {:lang('Add a slide')}
@@ -85,7 +89,6 @@
                             {:lang('All slides')}
                             </button>
                         </a>
-                        {/if}
                         <a href="{:Url('/admin/Index/addLinks')}">
                             <button type="button" class="btn btn-default btn-block{eq name="option" value="addLinks"} btn-primary{/eq}">
                             {:lang('Add links')}
@@ -96,11 +99,36 @@
                             {:lang('All links')}
                             </button>
                         </a>
-                        <a href="{:Url('/admin/Index/bgPic')}">
-                            <button type="button" class="btn btn-default btn-block{eq name="option" value="bgPic"} btn-primary{/eq}">
-                            {:lang('Background picture')}
+                    </div>
+                </div>
+            </div>
+            <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="heading_yh">
+                    <h4 class="panel-title">
+                        <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapse_yh">
+                            <span class="glyphicon glyphicon-user"></span>&nbsp;&nbsp;{:lang('User')}&nbsp;&nbsp;<span class="caret"></span>
+                        </a>
+                    </h4>
+                </div>
+                <div id="collapse_yh" class="panel-collapse collapse{eq name="backstageMenu" value="yonghu"} in{/eq}">
+                    <div class="list-group" style="margin-bottom: 0px;">
+                        <a href="{:Url('/admin/Index/general')}">
+                            <button type="button" class="btn btn-default btn-block{eq name="option" value="general"} btn-primary{/eq}">
+                                {:lang('General users')}
                             </button>
                         </a>
+                        {if condition="$permissions < 3"}
+                        <a href="{:Url('/admin/Index/addmanageuser')}">
+                            <button type="button" class="btn btn-default btn-block{eq name="option" value="addmanageuser"} btn-primary{/eq}">
+                                {:lang('Add user')}
+                            </button>
+                        </a>
+                        <a href="{:Url('/admin/Index/manageuser')}">
+                            <button type="button" class="btn btn-default btn-block{eq name="option" value="manageuser"} btn-primary{/eq}">
+                                {:lang('All users')}
+                            </button>
+                        </a>
+                        {/if}
                     </div>
                 </div>
             </div>
@@ -157,77 +185,24 @@
                             {:lang('Themes')}
                             </button>
                         </a>
+                        <a href="{:Url('/admin/Index/personal')}">
+                            <button type="button" class="btn btn-default btn-block{eq name="option" value="personal"} btn-primary{/eq}">
+                                {:lang('Personal information')}
+                            </button>
+                        </a>
+                        <a href="{:Url('/admin/Index/change')}">
+                            <button type="button" class="btn btn-default btn-block{eq name="option" value="change"} btn-primary{/eq}">
+                                {:lang('Change password')}
+                            </button>
+                        </a>
                         <a href="{:Url('/admin/Index/clearcache')}">
                             <button type="button" class="btn btn-default btn-block{eq name="option" value="clearcache"} btn-primary{/eq}">
                                 {:lang('Clear cache')}
                             </button>
                         </a>
-                        <a href="{:Url('/admin/Index/versioninfo')}">
-                            <button type="button" class="btn btn-default btn-block{eq name="option" value="versioninfo"} btn-primary{/eq}">
-                            {:lang('Version Information')}
-                            </button>
-                        </a>
-                        {if condition="$sysupgrade eq 1"}
-                        <a href="{:Url('/admin/Index/upgrade')}">
-                            <button type="button" class="btn btn-default btn-block{eq name="option" value="upgrade"} btn-primary{/eq}">
-                            {:lang('System Upgrade')}
-                            </button>
-                        </a>
-                        {/if}
                     </div>
                 </div>
             </div>
-            {/if}
-            {if condition="$permissions < 8"}
-            <div class="panel panel-default">
-                <div class="panel-heading" role="tab" id="heading_yh">
-                    <h4 class="panel-title">
-                        <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapse_yh">
-                            <span class="glyphicon glyphicon-user"></span>&nbsp;&nbsp;{:lang('User')}&nbsp;&nbsp;<span class="caret"></span>
-                        </a>
-                    </h4>
-                </div>
-                <div id="collapse_yh" class="panel-collapse collapse{eq name="backstageMenu" value="yonghu"} in{/eq}">
-                    <div class="list-group" style="margin-bottom: 0px;">
-                        {if condition="$permissions < 5"}
-                        <a href="{:Url('/admin/Index/general')}">
-                            <button type="button" class="btn btn-default btn-block{eq name="option" value="general"} btn-primary{/eq}">
-                            {:lang('All users')}
-                            </button>
-                        </a>
-                        {/if}
-                        <a href="{:Url('/admin/Index/personal')}">
-                            <button type="button" class="btn btn-default btn-block{eq name="option" value="personal"} btn-primary{/eq}">
-                            {:lang('Personal information')}
-                            </button>
-                        </a>
-                        <a href="{:Url('/admin/Index/change')}">
-                            <button type="button" class="btn btn-default btn-block{eq name="option" value="change"} btn-primary{/eq}">
-                            {:lang('Change password')}
-                            </button>
-                        </a>
-                        <a href="{:Url('/admin/Index/shoucang')}">
-                            <button type="button" class="btn btn-default btn-block{eq name="option" value="shoucang"} btn-primary{/eq}">
-                            {:lang('My collection')}
-                            </button>
-                        </a>
-                        <a href="{:Url('/admin/Index/pinglun')}">
-                            <button type="button" class="btn btn-default btn-block{eq name="option" value="pinglun"} btn-primary{/eq}">
-                            {:lang('My comments')}
-                            </button>
-                        </a>
-                        {if condition="($permissions < 6) AND ($openMessage == 1)"}
-                        <a href="{:Url('/admin/Index/messages')}">
-                            <button type="button" class="btn btn-default btn-block{eq name="option" value="messages"} btn-primary{/eq}">
-                            {:lang('All messages')}
-                            </button>
-                        </a>
-                        {/if}
-                    </div>
-                </div>
-            </div>
-            {/if}
-            {if condition="$permissions < 5"}
             <div class="panel panel-default">
                 <div class="panel-heading" role="tab" id="heading_kz">
                     <h4 class="panel-title">

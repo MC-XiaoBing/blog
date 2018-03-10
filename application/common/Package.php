@@ -1,6 +1,6 @@
 <?php
 /**
- * Project: Catfish Blog.
+ * Project: Catfish CMS.
  * Author: A.J <804644245@qq.com>
  * Copyright: http://www.catfish-cms.com All rights reserved.
  * Date: 2017/8/9

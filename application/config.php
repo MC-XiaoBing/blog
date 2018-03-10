@@ -250,10 +250,10 @@ return [
 
     //版本设置
     'version'               => [
-        'name'      => 'Catfish(鲶鱼)',
-        'description'      => 'Blog',
-        'number'  => 'V 1.3.6',
-        'catfishType' => 'blog',
-        'official'  => 'catfish-cms.com'
+        'name' => 'Catfish(鲶鱼)',
+        'description' => 'CMS',
+        'number' => 'V 4.7.15',
+        'catfishType' => 'open',
+        'official' => 'catfish-cms.com'
     ]
 ];

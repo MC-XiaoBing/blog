@@ -1,7 +1,8 @@
 <?php
 /**
- * Project: Catfish.
- * Author: A.J
+ * Project: Catfish CMS.
+ * Author: A.J <804644245@qq.com>
+ * Copyright: http://www.catfish-cms.com All rights reserved.
  * Date: 2016/11/29
  */
 return [
@@ -51,7 +52,7 @@ return [
     'Previous' => 'précédent',
     'Installation will be completed, rest for a while now!' => 'L\'installation est bientôt fini, reposez - vous!',
     'Congratulations! Installation has been completed!' => 'Félicitations, l\'installation est terminée!',
-    'Thank you for your support of the Catfish Blog system!' => 'Merci d\'utiliser le système Catfish Blog!',
+    'Thank you for your support of the Catfish CMS system!' => 'Merci d\'utiliser le système Catfish CMS!',
     'Is not still immersed in the installation of happiness, but the installation is over, then you will continue to use the site in the process of happiness, let us start!' => 'N\'est - ce pas également immergé dans l\'installation de joie, mais l\'installation est fini, ensuite vous lors de l\'utilisation de sites de continuer à être heureux, commençons!',
     'Enter the home page' => 'Entrez la page d\'accueil',
     'Into the background' => 'L\'Administrateur de la page',
@@ -73,8 +74,9 @@ return [
     'Email format is incorrect' => 'Le format d\'e-mail est incorrect',
     'The "Administrator Password" and "Confirm Password" must be the same' => 'Le "Mot de passe administrateur" et "Confirmer mot de passe" doivent être identiques',
     'Database information error' => 'Erreur d\'information sur la base de données',
-    'Another Catfish Blog site' => 'Un autre site de Catfish Blog',
-    'Catfish Blog' => 'Catfish Blog',
+    'Another Catfish CMS site' => 'Un autre site de Catfish CMS',
+    'Catfish CMS' => 'Catfish CMS',
     'Installation completed' => 'Installation complétée',
-    'If you use an existing database, replace it with the actual database name' => 'Si vous utilisez une base de données existante, remplacez-la par le nom de la base de données'
+    'If you use an existing database, replace it with the actual database name' => 'Si vous utilisez une base de données existante, remplacez-la par le nom de la base de données',
+    'Bad database name' => 'Nom de base de données incorrect'
 ];

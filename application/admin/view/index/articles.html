@@ -34,6 +34,8 @@
         <p>
             <label>{:lang('Batch operation')}：</label>
             {if condition="$authority eq 'all'"}
+            <button type="button" id="shenhe" class="btn btn-primary btn-sm">{:lang('Approve')}<span class="hidden">&nbsp;<img src="{$domain}public/common/images/zhixing_bai.gif" width="14" height="14"></span></button>
+            <button type="button" id="weishenhe" class="btn btn-primary btn-sm">{:lang('Unapprove')}<span class="hidden">&nbsp;<img src="{$domain}public/common/images/zhixing_bai.gif" width="14" height="14"></span></button>
             <button type="button" id="zhiding" class="btn btn-primary btn-sm">{:lang('Top')}<span class="hidden">&nbsp;<img src="{$domain}public/common/images/zhixing_bai.gif" width="14" height="14"></span></button>
             <button type="button" id="weizhiding" class="btn btn-primary btn-sm">{:lang('Cancel top')}<span class="hidden">&nbsp;<img src="{$domain}public/common/images/zhixing_bai.gif" width="14" height="14"></span></button>
             <button type="button" id="tuijian" class="btn btn-primary btn-sm">{:lang('Recommend')}<span class="hidden">&nbsp;<img src="{$domain}public/common/images/zhixing_bai.gif" width="14" height="14"></span></button>
@@ -71,6 +73,9 @@
                     <td>{$vo.user_login}</td>
                     <td>{$vo.post_date}</td>
                     <td>
+                        {if condition="($vo.post_status == 1)"} <h5 class="text-success"><span class="glyphicon glyphicon-ok"></span> {:lang('Audited')}</h5>
+                        {else /} <h5 class="text-muted">{:lang('Not audited')}</h5>
+                        {/if}
                         {if condition="($vo.istop == 1)"} <h5 class="text-success"><span class="glyphicon glyphicon-ok"></span> {:lang('Topped')}</h5>
                         {else /} <h5 class="text-muted">{:lang('Not top')}</h5>
                         {/if}
@@ -105,6 +110,7 @@
 <div class="hidden" id="jinggao">{:lang('Warning!')}</div>
 <div class="hidden" id="zhishaoxuanyixiang">{:lang('Please select at least one!')}</div>
 <div class="hidden" id="queding">{:lang('Ok')}</div>
+<div class="hidden" id="verification">{$verification}</div>
 <script type="text/javascript" src="{$domain}public/common/datetimepicker/js/bootstrap-datetimepicker.min.js" charset="UTF-8"></script>
 <script src="{$domain}public/common/confirm/jquery-confirm.js"></script>
 <script src="{$domain}public/common/js/articles.js"></script>

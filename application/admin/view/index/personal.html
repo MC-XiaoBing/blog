@@ -33,38 +33,6 @@
                 <input type="text" class="form-control" name="user_url" value="{$data.user_url}" placeholder="http://">
             </div>
             <div class="form-group">
-                <label>{:lang('Graduated school')}：</label>
-                <input type="text" class="form-control" name="xuexiao" value="{$data.xuexiao}">
-            </div>
-            <div class="form-group">
-                <label>{:lang('Phone')}：</label>
-                <input type="text" class="form-control" maxlength="20" name="mobile" value="{$data.mobile}">
-            </div>
-            <div class="form-group">
-                <label>{:lang('QQ')}：</label>
-                <input type="text" class="form-control" name="qq" value="{$data.qq}">
-            </div>
-            <div class="form-group">
-                <label>{:lang('Weibo')}：</label>
-                <input type="text" class="form-control" name="weibo" value="{$data.weibo}">
-            </div>
-            <div class="form-group">
-                <label>{:lang('WeChat')}：</label>
-                <input type="text" class="form-control" name="weixin" value="{$data.weixin}">
-            </div>
-            <div class="form-group">
-                <label>{:lang('Facebook')}：</label>
-                <input type="text" class="form-control" name="facebook" value="{$data.facebook}">
-            </div>
-            <div class="form-group">
-                <label>{:lang('Twitter')}：</label>
-                <input type="text" class="form-control" name="twitter" value="{$data.twitter}">
-            </div>
-            <div class="form-group">
-                <label>{:lang('Skype')}：</label>
-                <input type="text" class="form-control" name="skype" value="{$data.skype}">
-            </div>
-            <div class="form-group">
                 <label>{:lang('Signature')}：</label>
                 <textarea class="form-control" name="signature" rows="3">{$data.signature}</textarea>
             </div>
@@ -75,6 +43,7 @@
                 <div id="upload"></div>
             </div>
             <div class="text-center">
+                <input type="hidden" name="verification" value="{$verification}">
                 <button type="submit" class="btn btn-default">{:lang('Save')}<span class="hidden">&nbsp;<img src="{$domain}public/common/images/zhixing.gif" width="16" height="16"></span></button>
             </div>
         </form>

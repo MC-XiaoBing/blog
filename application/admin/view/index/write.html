@@ -2,20 +2,13 @@
 {notempty name="editor_css"}
 {$editor_css}
 {else /}
-<link href="{$domain}public/common/kindeditor/themes/default/default.css" type="text/css" rel="stylesheet">
-<link href="{$domain}public/common/kindeditor/plugins/code/prettify.css" type="text/css" rel="stylesheet">
+<link href="{$domain}public/common/umeditor/themes/default/css/umeditor.min.css" type="text/css" rel="stylesheet">
 {/notempty}
 <link href="{$domain}public/common/uploadify/uploadify.css" type="text/css" rel="stylesheet">
 <link href="{$domain}public/common/datetimepicker/css/bootstrap-datetimepicker.min.css" type="text/css" rel="stylesheet">
 <div class="row bg-info text-center">
     <h4>{:lang('Write an article')}</h4>
 </div><br>
-<div id="jiancexinban" class="panel panel-default{if condition="$newk eq 1"} hidden{/if}">
-    <div class="panel-body">
-        <span>{:lang('Catfish Blog has the latest version available')}</span><span style="margin-left: 30px;"><a href="{:Url('/admin/Index/upgrade')}">{:lang('upgrade immediately')}</a></span><span style="margin-left: 30px;"><a id="butixing" href="#!">{:lang('No reminder within a week')}</a></span>
-        <span id="guanbi" class="badge pull-right" style="cursor: pointer;"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></span>
-    </div>
-</div>
 <div class="container-fluid">
     <div class="row" style="min-height: 800px;">
         <form method="post" action="" name="writeForm">
@@ -59,16 +52,11 @@
                     </select>
                     <p class="help-block">{:lang('Windows: Hold down the Ctrl button to select multiple options, Mac: Press the command button to select multiple options')}</p>
                 </div>
-                <div class="form-group">
-                    <label>{:lang('Private article')}：</label>
-                    <div class="checkbox">
-                        <label>
-                            <input type="checkbox" name="simiwenzhang"> {:lang('Set to a private article')}
-                        </label>
-                        <p class="help-block">{:lang('Private articles only the author himself can see that others can not access')}</p>
-                    </div>
-                </div>
+                {notempty name="write_append"}
+                {$write_append}
+                {/notempty}
                 <div class="text-center">
+                    <input type="hidden" name="verification" value="{$verification}">
                     <button type="submit" class="btn btn-default" id="baocun">{:lang('Save')}<span class="hidden">&nbsp;<img src="{$domain}public/common/images/zhixing.gif" width="16" height="16"></span></button>
                 </div><br><br>
             </div>
@@ -194,6 +182,20 @@
                         </div>
                     </div>
                 </div>
+                {if condition="$permissions < 6"}
+                <div class="panel panel-default">
+                    <div class="panel-heading">{:lang('Immediate release')}</div>
+                    <div class="panel-body">
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" name="jsfb">
+                                {:lang('Immediate release')}
+                            </label>
+                        </div>
+                        <p class="help-block">{:lang('Select the immediate release, the article will immediately show, but will consume more resources, it is recommended not to check')}</p>
+                    </div>
+                </div>
+                {/if}
             </div>
         </form>
     </div>
@@ -247,13 +249,12 @@
 <div class="hidden" id="webroot">{$domain}</div>
 <div class="hidden" id="upload_url">upload</div>
 <div class="hidden" id="buttonText">{:lang('Select Image')}</div>
-<div class="hidden" id="newv">{$newv}</div>
 {notempty name="editor_js"}
 {$editor_js}
 {else /}
-<script type="text/javascript" charset="utf-8" src="{$domain}public/common/kindeditor/kindeditor-all-min.js"></script>
-<script type="text/javascript" charset="utf-8" src="{$domain}public/common/kindeditor/lang/zh-CN.js"></script>
-<script type="text/javascript" src="{$domain}public/common/kindeditor/plugins/code/prettify.js"></script>
+<script type="text/javascript" charset="utf-8" src="{$domain}public/common/umeditor/umeditor.config.js"></script>
+<script type="text/javascript" charset="utf-8" src="{$domain}public/common/umeditor/umeditor.min.js"></script>
+<script type="text/javascript" src="{$domain}public/common/umeditor/lang/zh-cn/zh-cn.js"></script>
 {/notempty}
 <script type="text/javascript" src="{$domain}public/common/uploadify/jquery.uploadify.js"></script>
 <script type="text/javascript" src="{$domain}public/common/datetimepicker/js/bootstrap-datetimepicker.min.js" charset="UTF-8"></script>

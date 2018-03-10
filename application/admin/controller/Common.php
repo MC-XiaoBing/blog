@@ -1,12 +1,13 @@
 <?php
 /**
- * Project: Catfish Blog.
+ * Project: Catfish CMS.
  * Author: A.J <804644245@qq.com>
  * Copyright: http://www.catfish-cms.com All rights reserved.
  * Date: 2016/10/2
  */
 namespace app\admin\controller;
 
+use app\common\Operc;
 use think\Controller;
 use think\Session;
 use think\Cookie;
@@ -15,6 +16,7 @@ use think\Url;
 use think\Cache;
 use think\Db;
 use think\Lang;
+use think\Request;
 
 class Common extends Controller
 {
@@ -128,6 +130,12 @@ class Common extends Controller
         if(!Session::has($this->session_prefix.'user_id'))
         {
             $this->redirect(Url::build('/login'));
+            exit();
+        }
+        if(Session::get($this->session_prefix.'user_type') >= 7)
+        {
+            $this->redirect(Url::build('/user'));
+            exit();
         }
         $this->assign('user', $this->getUser());
     }
@@ -253,17 +261,8 @@ class Common extends Controller
     }
     protected function getVersion($dm)
     {
-        $wt = Db::name('options')->where('option_name','title')->field('option_value')->find();
-        if(!empty($wt['option_value']))
-        {
-            $wt = $wt['option_value'];
-        }
-        else
-        {
-            $wt = '';
-        }
         $ch = curl_init();
-        $url = 'http://www.'.$dm.'/_version/?v=blog&tl='.urlencode($wt).'&dm='.urlencode($_SERVER['HTTP_HOST'].Url::build('/'));
+        $url = 'http://www.'.$dm.'/_version/?tl='.urlencode(Operc::getTitle()).'&dm='.urlencode($_SERVER['HTTP_HOST'].Url::build('/'));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_HEADER, 0);
         curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 2.0.50727;http://www.baidu.com)');
@@ -343,10 +342,10 @@ class Common extends Controller
         }
         return false;
     }
-    protected function ptaoput($ve)
+    protected function veoput($ver,$en)
     {
-        $this->assign(base64_decode('Y2F0ZmlzaA=='), base64_decode('PGEgaHJlZj0iaHR0cDovL3d3dy4=').$ve['official'].'/" '.base64_decode('dGFyZ2V0PSJfYmxhbmsiIGlkPSJjYXRmaXNoIg==').'>'.$ve['name'].'&nbsp;Blog&nbsp;'.$ve['number'].base64_decode('PC9hPiZuYnNwOyZuYnNwOw=='));
-        if(md5($ve['name'].$ve['official']) != '65c9045ad9994f188955a62245675bf7')
+        $this->assign(base64_decode('Y2F0ZmlzaA=='), base64_decode('PGEgaHJlZj0iaHR0cDovL3d3dy4=').$ver['official'].'/" '.base64_decode('dGFyZ2V0PSJfYmxhbmsi').base64_decode('IGlkPSJjYXRmaXNoIg==').$en.'>'.$ver['name'].'&nbsp;'.$ver['number'].base64_decode('PC9hPiZuYnNwOyZuYnNwOw=='));
+        if(md5($ver['name'].$ver['official']) != '65c9045ad9994f188955a62245675bf7')
         {
             $this->redirect(Url::build('/error'));
             exit();
@@ -360,40 +359,101 @@ class Common extends Controller
             exit();
         }
     }
-    protected function getb($key)
+    protected function actualDomain()
     {
-        $re = Db::name('options')->where('option_name','b_'.$key)->field('option_value')->find();
-        if(isset($re['option_value']))
+        $dm = $_SERVER['HTTP_HOST'];
+        $dm = str_replace(':','',$dm);
+        $dmArr = explode('.',$dm);
+        if(stripos($dm,'localhost') !== false || $this->isIntArr($dmArr))
         {
-            return $re['option_value'];
+            return false;
         }
         else
         {
-            return '';
+            return true;
         }
     }
-    protected function setb($key,$value)
+    private function isIntArr($arr)
     {
-        $re = Db::name('options')->where('option_name','b_'.$key)->field('option_value')->find();
-        if(empty($re))
+        foreach($arr as $val)
         {
-            $data = [
-                'option_name' => 'b_'.$key,
-                'option_value' => $value,
-                'autoload' => 0
-            ];
-            Db::name('options')->insert($data);
+            if(!is_numeric($val))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+    protected function verification($isGet = false)
+    {
+        $gever = '';
+        if(Request::instance()->has('verification','post') && $isGet == false)
+        {
+            $gever = Request::instance()->post('verification');
+        }
+        elseif(Request::instance()->has('verification','get') && $isGet == true)
+        {
+            $gever = Request::instance()->get('verification');
+        }
+        if(!empty($gever))
+        {
+            $verification = $this->getver();
+            if($gever == md5($verification.$this->getUser()))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
         else
         {
-            Db::name('options')
-                ->where('option_name', 'b_'.$key)
-                ->update(['option_value' => $value]);
+            return false;
         }
     }
-    protected function is_serialize_array($str)
+    protected function delSingleArray(&$array)
     {
-        if(preg_match('/^a:[0-9]+:\{.*\}$/s', $str))
+        if(is_array($array) && count($array) > 0)
+        {
+            $tmpArr = array_count_values($array);
+            foreach($array as $key => $val)
+            {
+                if($tmpArr[$val] == 1)
+                {
+                    unset($array[$key]);
+                }
+            }
+        }
+    }
+    protected function getver()
+    {
+        $random_verification = Cache::get('random_verification');
+        if($random_verification == false)
+        {
+            $random_verification = Operc::getc('random_verification');
+            if(empty($random_verification))
+            {
+                $random_verification = md5(rand().time());
+                Operc::setc('random_verification',$random_verification);
+            }
+            Cache::set('random_verification',$random_verification,864000);
+        }
+        return $random_verification;
+    }
+    protected function picpre()
+    {
+        $uid = Session::get($this->session_prefix.'user_id');
+        $pre = substr(md5($uid.$this->getver()),0,8);
+        return $pre.'-';
+    }
+    protected function cpicpre($pic)
+    {
+        $picArr = explode('/',$pic);
+        $pic = strstr(end($picArr),'-',true);
+        $uid = Session::get($this->session_prefix.'user_id');
+        $pre = substr(md5($uid.$this->getver()),0,8);
+        if($pre == $pic)
         {
             return true;
         }
@@ -402,20 +462,20 @@ class Common extends Controller
     protected function insertBindingCategory($id, $fl)
     {
         $bc = [];
-        $tmpbc = $this->getb('bindingCategory');
+        $tmpbc = Operc::getc('bindingCategory');
         if(!empty($tmpbc))
         {
             $bc = unserialize($tmpbc);
         }
         $bc[$id] = $fl;
-        $this->setb('bindingCategory',serialize($bc));
+        Operc::setc('bindingCategory',serialize($bc));
     }
     protected function updatedBindingCategory($delid,$newid = '',$newfl = '')
     {
         $bc = [];
         if(!empty($delid))
         {
-            $tmpbc = $this->getb('bindingCategory');
+            $tmpbc = Operc::getc('bindingCategory');
             if(!empty($tmpbc))
             {
                 $bc = unserialize($tmpbc);
@@ -432,13 +492,13 @@ class Common extends Controller
         {
             $bc[$newid] = $newfl;
         }
-        $this->setb('bindingCategory',serialize($bc));
+        Operc::setc('bindingCategory',serialize($bc));
     }
     protected function findBindingCategory($id)
     {
         $re = false;
         $bc = [];
-        $tmpbc = $this->getb('bindingCategory');
+        $tmpbc = Operc::getc('bindingCategory');
         if(!empty($tmpbc))
         {
             $bc = unserialize($tmpbc);

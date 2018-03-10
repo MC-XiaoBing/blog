@@ -106,6 +106,74 @@ class Plugin extends Controller
             return false;
         }
     }
+    protected function category()
+    {
+        $data = Db::name('terms')->field('id,term_name,parent_id')->select();
+        if(is_array($data) && count($data) > 0)
+        {
+            $r = Tree::makeTreeForHtml($data);
+            foreach($r as $key => $val){
+                $r[$key]['level'] = str_repeat('&#12288;',$val['level']);
+            }
+            return $r;
+        }
+        else
+        {
+            return [];
+        }
+    }
+    protected function subcategory($subcategoryName = '', $category = [], $self = true)
+    {
+        if(empty($subcategoryName))
+        {
+            return $category;
+        }
+        $delstart = true;
+        $level = '';
+        foreach((array)$category as $key => $val)
+        {
+            if($val['term_name'] != $subcategoryName && $delstart == true)
+            {
+                unset($category[$key]);
+                continue;
+            }
+            if($val['term_name'] == $subcategoryName && $delstart == true)
+            {
+                $delstart = false;
+                $level = $val['level'];
+                if($self == false)
+                {
+                    unset($category[$key]);
+                }
+                continue;
+            }
+            if($delstart == false && strlen($val['level']) > strlen($level))
+            {
+                continue;
+            }
+            if($delstart == false && strlen($val['level']) <= strlen($level))
+            {
+                $delstart = true;
+                $level = '';
+                if($val['term_name'] != $subcategoryName)
+                {
+                    unset($category[$key]);
+                    continue;
+                }
+                else
+                {
+                    $delstart = false;
+                    $level = $val['level'];
+                    if($self == false)
+                    {
+                        unset($category[$key]);
+                    }
+                    continue;
+                }
+            }
+        }
+        return $category;
+    }
     protected function userID()
     {
         $session_prefix = 'catfish'.str_replace(['/','.',' ','-'],['','?','*','|'],Url::build('/'));
@@ -160,6 +228,14 @@ class Plugin extends Controller
         {
             $params[$label] = $data;
         }
+    }
+    protected function addArray(&$params,$label,$array)
+    {
+        $params[$label][$array['name']] = $array;
+    }
+    protected function addGroup(&$params,$label,$group,$array)
+    {
+        $params[$label][$group][$array['name']] = $array;
     }
     protected function importFiles($files)
     {
@@ -233,6 +309,28 @@ class Plugin extends Controller
         }
         return $siteName;
     }
+    protected function binding($view,$name,&$params,$title = '')
+    {
+        if(isset($params['name']) && $params['name'] == $name)
+        {
+            $params['view'] = $view;
+            if(!empty($title))
+            {
+                $params['title'] = $title;
+            }
+        }
+    }
+    protected function bindingGroup($view,$name,$group,&$params,$title = '')
+    {
+        if(isset($params['name']) && $params['name'] == $name && isset($params['group']) && $params['group'] == $group)
+        {
+            $params['view'] = $view;
+            if(!empty($title))
+            {
+                $params['title'] = $title;
+            }
+        }
+    }
     protected function delfile($url)
     {
         $url = str_replace('\\','/',$url);
@@ -265,6 +363,35 @@ class Plugin extends Controller
     {
         $validate = new Validate($rule, $msg);
         return $validate;
+    }
+    protected function uhref($label,$isTop = false, $isGroup = false)
+    {
+        if($isTop == true)
+        {
+            if($isGroup == true)
+            {
+                return Url::build('/user/Index/plugingt/name/'.$label);
+            }
+            else
+            {
+                return Url::build('/user/Index/plugint/name/'.$label);
+            }
+        }
+        else
+        {
+            if($isGroup == true)
+            {
+                return Url::build('/user/Index/plugingp/name/'.$label);
+            }
+            else
+            {
+                return Url::build('/user/Index/plugin/name/'.$label);
+            }
+        }
+    }
+    protected function phref()
+    {
+        return Url::build('/admin/Index/plugins/plugin/'.$this->getPlugin());
     }
     protected function bindUser($userInfo)
     {
@@ -338,13 +465,18 @@ class Plugin extends Controller
     }
     protected function statement($statement)
     {
-        if(!(strcasecmp(strtolower($statement),base64_decode('Y2F0ZmlzaCBibG9nIHBsdWdpbg==')) == 0 ? true : false) && !(strcasecmp(strtolower($statement),base64_decode('Y2F0ZmlzaCBhbGwgcGx1Z2lu')) == 0 ? true : false))
+        if(!(strcasecmp(strtolower($statement),base64_decode('Y2F0ZmlzaCBjbXMgcGx1Z2lu')) == 0 ? true : false) && !(strcasecmp(strtolower($statement),base64_decode('Y2F0ZmlzaCBhbGwgcGx1Z2lu')) == 0 ? true : false))
         exit();
     }
     protected function getVersion()
     {
         $version = Config::get('version');
         return trim($version['number']);
+    }
+    protected function getCatfishType()
+    {
+        $version = Config::get('version');
+        return trim($version['catfishType']);
     }
     protected function getPost($param = '')
     {
@@ -364,7 +496,7 @@ class Plugin extends Controller
         {
             if(Request::instance()->has($param,'post'))
             {
-                return Request::instance()->post($param);
+                return urldecode(Request::instance()->post($param));
             }
             else
             {
@@ -390,13 +522,191 @@ class Plugin extends Controller
         {
             if(Request::instance()->has($param,'get'))
             {
-                return Request::instance()->get($param);
+                return urldecode(Request::instance()->get($param));
             }
             else
             {
                 return false;
             }
         }
+    }
+    protected function addMainMenu(&$params,$label,$href,$position = 'last',$target = '_self',$icon = '')
+    {
+        $jian = array_keys((array)$params);
+        if($jian[0] != 'menu1')
+        {
+            return false;
+        }
+        $firstFloorMainMenuLen = count($params['menu1']);
+        if($target == '')
+        {
+            $target = '_self';
+        }
+        $arr[] = [
+            'id' => 0,
+            'parent_id' => 0,
+            'label' => $label,
+            'target' => $target,
+            'href' => Url::build('/cpage/'.$href),
+            'icon' => $icon
+        ];
+        $isover = false;
+        $layer = [];
+        if($position == 'first')
+        {
+            $layer[] = 0;
+            $isover = true;
+        }
+        elseif($position == 'second')
+        {
+            $layer[] = 1;
+            $isover = true;
+        }
+        elseif($position == 'last' || $position == '' || !preg_match('/^\d+(,\d+)*$/', $position))
+        {
+            $layer[] = $firstFloorMainMenuLen;
+            $isover = true;
+        }
+        if($isover == false)
+        {
+            $poarr = explode(',',$position);
+            foreach($poarr as $val)
+            {
+                $layer[] = $val;
+            }
+            $isover = true;
+        }
+        if($layer[0] >= $firstFloorMainMenuLen)
+        {
+            $layer[0] = $firstFloorMainMenuLen;
+        }
+        $tmpmenu = $this->appendMenu($params['menu1'],$layer,$arr);
+        $daohang = $tmpmenu['daohang'];
+        unset($tmpmenu['daohang']);
+        $params['menu1'] = $tmpmenu;
+        $params['daohang'][$href] = $daohang;
+        return true;
+    }
+    private function appendMenu($menu,$layer,$arr,$daohang = [])
+    {
+        if(count($layer) == 1)
+        {
+            $cmenu = count($menu);
+            if($layer[0] >= $cmenu)
+            {
+                $layer[0] = $cmenu;
+            }
+            array_splice($menu,$layer[0],0,(array)$arr);
+            $daohang[] = [
+                'id' => 0,
+                'label' => $arr[0]['label'],
+                'icon' => $arr[0]['icon'],
+                'href' => $arr[0]['href']
+            ];
+            $menu['daohang'] = $daohang;
+            return $menu;
+        }
+        else
+        {
+            $fst = array_shift($layer);
+            $cmenu = count($menu);
+            if($fst >= $cmenu)
+            {
+                $fst = $cmenu;
+            }
+            if(isset($menu[$fst]['children']))
+            {
+                $daohang[] = [
+                    'id' => $menu[$fst]['id'],
+                    'label' => $menu[$fst]['label'],
+                    'icon' => $menu[$fst]['icon'],
+                    'href' => $menu[$fst]['href']
+                ];
+                $tmpmenu = $this->appendMenu($menu[$fst]['children'],$layer,$arr,$daohang);
+                $tmpdaohang = $tmpmenu['daohang'];
+                unset($tmpmenu['daohang']);
+                $menu[$fst]['children'] = $tmpmenu;
+                $menu['daohang'] = $tmpdaohang;
+                return $menu;
+            }
+            else
+            {
+                array_splice($menu,$fst,0,(array)$arr);
+                $daohang[] = [
+                    'id' => 0,
+                    'label' => $arr[0]['label'],
+                    'icon' => $arr[0]['icon'],
+                    'href' => $arr[0]['href']
+                ];
+                $menu['daohang'] = $daohang;
+                return $menu;
+            }
+        }
+    }
+    protected function bindingMenu(&$params,$name)
+    {
+        if($params['name'] == $name)
+        {
+            return true;
+        }
+        return false;
+    }
+    protected function defineIncludeFile($files, $path = 'page')
+    {
+        $lei = $this->getPlugin();
+        if($path != '')
+        {
+            $path = trim($path,'/');
+            $path = $path.'/';
+        }
+        $files = explode(',',$files);
+        foreach($files as $val)
+        {
+            if(Request::instance()->isMobile() && is_file(APP_PATH.'plugins/'.$lei.'/'.$path.'mobile/'.$val.'.html'))
+            {
+                $this->assign($val, 'application/plugins/'.$lei.'/'.$path.'mobile/'.$val.'.html');
+            }
+            else
+            {
+                $this->assign($val, 'application/plugins/'.$lei.'/'.$path.$val.'.html');
+            }
+        }
+    }
+    private function getPlugin()
+    {
+        $lei = get_called_class();
+        $lei = str_replace('\\','/',$lei);
+        $lei = trim($lei,'/');
+        $leiArr = explode('/',$lei);
+        $leiArr = array_slice($leiArr,-2,1);
+        return $leiArr[0];
+    }
+    protected function importTheme(&$params, $path)
+    {
+        $lei = $this->getPlugin();
+        $path = str_replace('\\','/',$path);
+        $path = trim($path, '/');
+        $file = pathinfo($path);
+        if($file['dirname'] == '.')
+        {
+            $mobile = 'mobile/'.$file['basename'];
+        }
+        else
+        {
+            $mobile = $file['dirname'].'/mobile/'.$file['basename'];
+        }
+        if(Request::instance()->isMobile() && is_file(APP_PATH.'plugins/'.$lei.'/'.$mobile))
+        {
+            $params['path'] = $lei.'/'.$mobile;
+        }
+        else
+        {
+            $params['path'] = $lei.'/'.$path;
+        }
+    }
+    protected function pluginLabel($name, $content)
+    {
+        $this->assign('p_'.$name, $content);
     }
     protected function theme()
     {
@@ -408,25 +718,8 @@ class Plugin extends Controller
         }
         return $template['option_value'];
     }
-    private function getPlugin()
-    {
-        $lei = get_called_class();
-        $lei = str_replace('\\','/',$lei);
-        $lei = trim($lei,'/');
-        $leiArr = explode('/',$lei);
-        $leiArr = array_slice($leiArr,-2,1);
-        return $leiArr[0];
-    }
-    protected function pluginLabel($name, $content)
-    {
-        $this->assign('p_'.$name, $content);
-    }
     protected function bindingView($view,&$params)
     {
         $params['view'] = $view;
-    }
-    protected function phref()
-    {
-        return Url::build('/admin/Index/plugins/plugin/'.$this->getPlugin());
     }
 }

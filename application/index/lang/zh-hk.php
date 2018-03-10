@@ -9,8 +9,5 @@ return [
     'No search found' => '沒有找到搜索內容',
     'Search' => '搜索',
     'Message content must be filled out' => '留言內容必須填寫',
-    'The e-mail format is incorrect' => '郵箱格式錯誤',
-    'secrecy' => '保密',
-    'male' => '男',
-    'female' => '女'
+    'The e-mail format is incorrect' => '郵箱格式錯誤'
 ];

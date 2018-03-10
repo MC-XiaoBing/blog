@@ -1,7 +1,8 @@
 <?php
 /**
- * Project: Catfish.
- * Author: A.J
+ * Project: Catfish CMS.
+ * Author: A.J <804644245@qq.com>
+ * Copyright: http://www.catfish-cms.com All rights reserved.
  * Date: 2016/11/22
  */
 return [
@@ -51,7 +52,7 @@ return [
     'Previous' => '上一步',
     'Installation will be completed, rest for a while now!' => '安装马上完成，休息一会儿吧!',
     'Congratulations! Installation has been completed!' => '恭喜您，安装完成！',
-    'Thank you for your support of the Catfish Blog system!' => '感谢您对鲶鱼系统的支持！',
+    'Thank you for your support of the Catfish CMS system!' => '感谢您对鲶鱼系统的支持！',
     'Is not still immersed in the installation of happiness, but the installation is over, then you will continue to use the site in the process of happiness, let us start!' => '是不是还沉浸在安装的快乐之中，但安装已经结束啦，接下来您将在使用站点的过程中继续快乐，让我们开始吧!',
     'Enter the home page' => '进入前台',
     'Into the background' => '进入后台',
@@ -73,8 +74,9 @@ return [
     'Email format is incorrect' => 'Email格式错误',
     'The "Administrator Password" and "Confirm Password" must be the same' => '“管理员密码”和“重复密码”必须相同',
     'Database information error' => '数据库信息错误',
-    'Another Catfish Blog site' => '又一个Catfish(鲶鱼) Blog站点',
-    'Catfish Blog' => 'Catfish(鲶鱼) Blog',
+    'Another Catfish CMS site' => '又一个Catfish(鲶鱼) CMS站点',
+    'Catfish CMS' => 'Catfish(鲶鱼) CMS',
     'Installation completed' => '安装完毕',
-    'If you use an existing database, replace it with the actual database name' => '如果使用已经存在的数据库，请换成实际使用的数据库名'
+    'If you use an existing database, replace it with the actual database name' => '如果使用已经存在的数据库，请换成实际使用的数据库名',
+    'Bad database name' => '数据库名错误'
 ];

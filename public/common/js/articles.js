@@ -9,9 +9,11 @@ $(document).ready(function(){
         confirmButton: $('#jixu').text(),
         cancelButton: $('#quxiao').text(),
         onAction: function(action){
+            // action is either 'confirm', 'cancel' or 'close'
             if(action == 'confirm'){
+                //删除
                 var obj = this.$target;
-                $.post("recycleArticle", { id: this.$target.parent().parent().children(":eq(0)").children("input").val()},
+                $.post("recycleArticle", { id: this.$target.parent().parent().children(":eq(0)").children("input").val(), verification: $("#verification").text()},
                     function(data){
                         obj.parent().parent().remove();
                     });
@@ -25,6 +27,12 @@ $(document).ready(function(){
         else{
             $(".gouxuan").prop("checked",false);
         }
+    });
+    $("#shenhe").click(function(){
+        $.caozuo($(this),'shenhe');
+    });
+    $("#weishenhe").click(function(){
+        $.caozuo($(this),'weishenhe');
     });
     $("#zhiding").click(function(){
         $.caozuo($(this),'zhiding');
@@ -52,6 +60,7 @@ $(document).ready(function(){
 });
 $.extend({'caozuo':function(obj,cz){
     var zcuan = '',ind = new Array();
+    //获取选中项和序号
     $(".gouxuan").each(function(index,element){
         if($(this).prop("checked")){
             ind.unshift(index);
@@ -65,22 +74,28 @@ $.extend({'caozuo':function(obj,cz){
     });
     if(zcuan != ''){
         obj.children("span").removeClass("hidden");
-        $.post("modify", { zcuan: zcuan, cz: cz},
+        $.post("modify", { zcuan: zcuan, cz: cz, verification: $("#verification").text()},
             function(data){
                 obj.children("span").addClass("hidden");
                 $.each(ind, function(i, value) {
                     switch(cz){
+                        case 'shenhe':
+                            $(".gouxuan:eq("+value+")").parent().parent().children(":eq(6)").children(":eq(0)").html('<h5 class="text-success"><span class="glyphicon glyphicon-ok"></span> '+$('#yishenhe').text()+'</h5>');
+                            break;
+                        case 'weishenhe':
+                            $(".gouxuan:eq("+value+")").parent().parent().children(":eq(6)").children(":eq(0)").html('<h5 class="text-muted">'+$('#meishenhe').text()+'</h5>');
+                            break;
                         case 'zhiding':
-                            $(".gouxuan:eq("+value+")").parent().parent().children(":eq(6)").children(":eq(0)").html('<h5 class="text-success"><span class="glyphicon glyphicon-ok"></span> '+$('#yizhiding').text()+'</h5>');
+                            $(".gouxuan:eq("+value+")").parent().parent().children(":eq(6)").children(":eq(1)").html('<h5 class="text-success"><span class="glyphicon glyphicon-ok"></span> '+$('#yizhiding').text()+'</h5>');
                             break;
                         case 'weizhiding':
-                            $(".gouxuan:eq("+value+")").parent().parent().children(":eq(6)").children(":eq(0)").html('<h5 class="text-muted">'+$('#meizhiding').text()+'</h5>');
+                            $(".gouxuan:eq("+value+")").parent().parent().children(":eq(6)").children(":eq(1)").html('<h5 class="text-muted">'+$('#meizhiding').text()+'</h5>');
                             break;
                         case 'tuijian':
-                            $(".gouxuan:eq("+value+")").parent().parent().children(":eq(6)").children(":eq(1)").html('<h5 class="text-success"><span class="glyphicon glyphicon-ok"></span> '+$('#yituijian').text()+'</h5>');
+                            $(".gouxuan:eq("+value+")").parent().parent().children(":eq(6)").children(":eq(2)").html('<h5 class="text-success"><span class="glyphicon glyphicon-ok"></span> '+$('#yituijian').text()+'</h5>');
                             break;
                         case 'weituijian':
-                            $(".gouxuan:eq("+value+")").parent().parent().children(":eq(6)").children(":eq(1)").html('<h5 class="text-muted">'+$('#meituijian').text()+'</h5>');
+                            $(".gouxuan:eq("+value+")").parent().parent().children(":eq(6)").children(":eq(2)").html('<h5 class="text-muted">'+$('#meituijian').text()+'</h5>');
                             break;
                         case 'pshanchu':
                             $(".gouxuan:eq("+value+")").parent().parent().remove();

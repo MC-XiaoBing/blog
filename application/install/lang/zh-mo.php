@@ -1,7 +1,8 @@
 <?php
 /**
- * Project: Catfish.
- * Author: A.J
+ * Project: Catfish CMS.
+ * Author: A.J <804644245@qq.com>
+ * Copyright: http://www.catfish-cms.com All rights reserved.
  * Date: 2016/11/27
  */
 return [
@@ -51,7 +52,7 @@ return [
     'Previous' => '上一步',
     'Installation will be completed, rest for a while now!' => '安裝馬上完成，休息一會兒吧!',
     'Congratulations! Installation has been completed!' => '恭喜您，安裝完成！',
-    'Thank you for your support of the Catfish Blog system!' => '感謝您對鯰魚系統的支持！',
+    'Thank you for your support of the Catfish CMS system!' => '感謝您對鯰魚系統的支持！',
     'Is not still immersed in the installation of happiness, but the installation is over, then you will continue to use the site in the process of happiness, let us start!' => '是不是還沉浸在安裝的快樂之中，但安裝已經結束啦，接下來您將在使用站點的過程中繼續快樂，讓我們開始吧!',
     'Enter the home page' => '進入前台',
     'Into the background' => '進入後台',
@@ -73,8 +74,9 @@ return [
     'Email format is incorrect' => 'Email格式錯誤',
     'The "Administrator Password" and "Confirm Password" must be the same' => '“管理員密碼”和“重複密碼”必須相同',
     'Database information error' => '數據庫信息錯誤',
-    'Another Catfish Blog site' => '又一個Catfish(鯰魚) Blog站點',
-    'Catfish Blog' => 'Catfish(鯰魚) Blog',
+    'Another Catfish CMS site' => '又一個Catfish(鯰魚) CMS站點',
+    'Catfish CMS' => 'Catfish(鯰魚) CMS',
     'Installation completed' => '安裝完畢',
-    'If you use an existing database, replace it with the actual database name' => '如果使用已經存在的數據庫，請換成實際使用的數據庫名'
+    'If you use an existing database, replace it with the actual database name' => '如果使用已經存在的數據庫，請換成實際使用的數據庫名',
+    'Bad database name' => '數據庫名錯誤'
 ];

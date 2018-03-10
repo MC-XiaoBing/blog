@@ -1,7 +1,8 @@
 <?php
 /**
- * Project: Catfish.
- * Author: A.J
+ * Project: Catfish CMS.
+ * Author: A.J <804644245@qq.com>
+ * Copyright: http://www.catfish-cms.com All rights reserved.
  * Date: 2016/11/28
  */
 return [
@@ -51,7 +52,7 @@ return [
     'Previous' => 'предыдущий',
     'Installation will be completed, rest for a while now!' => 'установка  и вскоре будет завершена  ,  отдохнуть  ! ',
     'Congratulations! Installation has been completed!' => 'Поздравляем, установка завершена!',
-    'Thank you for your support of the Catfish Blog system!' => 'Благодарим Вас за поддержку системы Сом Blog!',
+    'Thank you for your support of the Catfish CMS system!' => 'Благодарим Вас за поддержку системы Сом CMS!',
     'Is not still immersed in the installation of happiness, but the installation is over, then you will continue to use the site in the process of happiness, let us start!' => 'Это  не  также погружается в  установки  счастье  ,  но  установка  закончится  ,  тогда  вы  в  процессе  использования  сайта  будет  продолжать  счастье  , давайте начнем!',
     'Enter the home page' => 'дома',
     'Into the background' => 'вход  за кулисы',
@@ -73,8 +74,9 @@ return [
     'Email format is incorrect' => 'Формат электронной почты неверен',
     'The "Administrator Password" and "Confirm Password" must be the same' => '"  пароль администратора  " и "  подтвердить пароль  "  должны  же',
     'Database information error' => 'информация об ошибках базы данных',
-    'Another Catfish Blog site' => 'другой  Catfish  Blog  сайтов',
-    'Catfish Blog' => 'Catfish Blog',
+    'Another Catfish CMS site' => 'другой  Catfish  CMS  сайтов',
+    'Catfish CMS' => 'Catfish CMS',
     'Installation completed' => 'Установка завершена',
-    'If you use an existing database, replace it with the actual database name' => 'Если вы используете существующую базу данных, замените ее на фактическое имя базы данных'
+    'If you use an existing database, replace it with the actual database name' => 'Если вы используете существующую базу данных, замените ее на фактическое имя базы данных',
+    'Bad database name' => 'Плохое имя базы данных'
 ];

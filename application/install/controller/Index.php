@@ -1,6 +1,6 @@
 <?php
 /**
- * Project: Catfish Blog.
+ * Project: Catfish CMS.
  * Author: A.J <804644245@qq.com>
  * Copyright: http://www.catfish-cms.com All rights reserved.
  * Date: 2016/9/29
@@ -25,6 +25,14 @@ class Index extends Controller
         Lang::load(APP_PATH . 'install/lang/'.$this->lang.'.php');
     }
     public function index()
+    {
+        $this->check();
+        $this->assign('version',Config::get('version'));
+        $this->domain();
+        $view = $this->fetch();
+        return $view;
+    }
+    public function step1()
     {
         $this->check();
         $right = '<span class="glyphicon glyphicon-ok text-success"></span> ';
@@ -61,6 +69,12 @@ class Index extends Controller
             $data['curl'] = $right . Lang::get('Turned on');
         } else {
             $data['curl'] = $wrong . Lang::get('Unopened');
+            $err++;
+        }
+        if (class_exists('ZipArchive')) {
+            $data['ZipArchive'] = $right . Lang::get('Turned on');
+        } else {
+            $data['ZipArchive'] = $wrong . Lang::get('Unopened');
             $err++;
         }
         if (function_exists('session_start')) {
@@ -204,8 +218,6 @@ class Index extends Controller
             }
             $this->assign('version',Config::get('version'));
             $domain = $this->domain();
-            $view = $this->fetch();
-            echo $view;
             $sql = file_get_contents(APP_PATH . 'install/data/catfish.sql');
             $sql = str_replace("\r", "\n", $sql);
             $sql = explode(";\n", $sql);
@@ -218,19 +230,26 @@ class Index extends Controller
                 preg_match('/CREATE TABLE `([^ ]*)`/', $item, $matches);
                 $this->dbExec($item);
             }
+            $qu = $this->dbExec('select * from '.Request::instance()->post('prefix').'posts where id=1',true);
+            if(empty($qu))
+            {
+                $this->error(Lang::get('Bad database name'));
+            }
+            $view = $this->fetch();
+            echo $view;
             $create_date=date("Y-m-d H:i:s");
             $ip=get_client_ip(0,true);
             $this->dbExec("INSERT INTO `" . Request::instance()->post('prefix') . "users`
     (id,user_login,user_pass,user_nicename,user_email,user_url,create_time,user_activation_key,user_status,last_login_ip,last_login_time,user_type) VALUES
     (1, '" . Request::instance()->post('admin') . "', '" . md5(Request::instance()->post('pwd')) . "', '" . Request::instance()->post('admin') . "', '" . Request::instance()->post('email') . "', '', '{$create_date}', '', '1', '{$ip}','{$create_date}', 1)");
             $this->dbExec("INSERT INTO `" . Request::instance()->post('prefix') . "options` (option_id,option_name,option_value) VALUES (1, 'title', '" . Request::instance()->post('biaoti') . "')");
-            $subtitle = Lang::get('Another Catfish Blog site');
+            $subtitle = Lang::get('Another Catfish CMS site');
             $this->dbExec("INSERT INTO `" . Request::instance()->post('prefix') . "options` (option_id,option_name,option_value) VALUES (2, 'subtitle', '" . $subtitle . "')");
             $this->dbExec("INSERT INTO `" . Request::instance()->post('prefix') . "options` (option_id,option_name,option_value) VALUES (3, 'keyword', '')");
             $this->dbExec("INSERT INTO `" . Request::instance()->post('prefix') . "options` (option_id,option_name,option_value) VALUES (4, 'description', '')");
-            $this->dbExec("INSERT INTO `" . Request::instance()->post('prefix') . "options` (option_id,option_name,option_value) VALUES (5, 'template', 'cBlog-default')");
+            $this->dbExec("INSERT INTO `" . Request::instance()->post('prefix') . "options` (option_id,option_name,option_value) VALUES (5, 'template', 'default')");
             $this->dbExec("INSERT INTO `" . Request::instance()->post('prefix') . "options` (option_id,option_name,option_value) VALUES (6, 'record', '')");
-            $copyright = Lang::get('Catfish Blog');
+            $copyright = Lang::get('Catfish CMS');
             $this->dbExec("INSERT INTO `" . Request::instance()->post('prefix') . "options` (option_id,option_name,option_value) VALUES (7, 'copyright', '".serialize($copyright)."')");
             $this->dbExec("INSERT INTO `" . Request::instance()->post('prefix') . "options` (option_id,option_name,option_value) VALUES (8, 'statistics', '".serialize('')."')");
             $this->dbExec("INSERT INTO `" . Request::instance()->post('prefix') . "options` (option_id,option_name,option_value,autoload) VALUES (9, 'email', '" . Request::instance()->post('email') . "', 0)");
@@ -245,8 +264,11 @@ class Index extends Controller
             $this->dbExec("INSERT INTO `" . Request::instance()->post('prefix') . "options` (option_id,option_name,option_value,autoload) VALUES (18, 'spare', '', 0)");
             $this->dbExec("INSERT INTO `" . Request::instance()->post('prefix') . "options` (option_id,option_name,option_value,autoload) VALUES (19, 'write', '0', 0)");
             $this->dbExec("INSERT INTO `" . Request::instance()->post('prefix') . "options` (option_id,option_name,option_value,autoload) VALUES (20, 'checkwrite', '0', 0)");
-            $useless = 'Q2F0ZmlzaCjpsrbpsbwpIEJsb2fova/ku7bkvb/nlKjljY/orq4KCiAgICDmhJ/osKLmgqjpgInmi6lDYXRmaXNoKOmytumxvCkgQmxvZywg5biM5pyb5oiR5Lus55qE5Lqn5ZOB6IO95aSf5biu5oKo5oqK572R56uZ5Y+R5bGV55qE5pu05b+r44CB5pu05aW944CB5pu05by677yBCgogICAgQ2F0ZmlzaCjpsrbpsbwpIEJsb2flrpjmlrnnvZHnq5nvvJp3d3cuY2F0ZmlzaC1jbXMuY29tCgogICAg5LiA5pem5aSN5Yi244CB5LiL6L2944CB5a6J6KOF5oiW6ICF5Lul5YW25LuW5pa55byP5L2/55So5pys4oCc6L2v5Lu24oCd77yM5Y2z6KGo5piO5oKo5ZCM5oSP5o6l5Y+X5pys5Y2P6K6u5ZCE6aG55p2h5qy+55qE57qm5p2f77yM5ZCM5pe25YyF5ous5o6l5Y+XQ2F0ZmlzaCjpsrbpsbwpIEJsb2fova/ku7blr7nljY/orq7lkITpobnmnaHmrL7pmo/ml7bmiYDlgZrnmoTku7vkvZXkv67mlLnjgILlpoLmnpzmgqjkuI3lkIzmhI/mnKzljY/orq7kuK3nmoTmnaHmrL7vvIzor7fli7/lpI3liLbjgIHkuIvovb3jgIHmn6XnnIvjgIHlronoo4XmiJbogIXku6Xlhbbku5bmlrnlvI/kvb/nlKjmnKzigJzova/ku7bigJ3jgIIKCuiuuOWPr+aCqOeahOadg+WIqeWSjOiMg+WbtO+8mgoKICAgIOaCqOWPr+S7peWcqOWujOWFqOmBteWuiOacrOacgOe7iOeUqOaIt+aOiOadg+WNj+iurueahOWfuuehgOS4iu+8jOWwhkNhdGZpc2go6bK26bG8KSBCbG9n5bqU55So5LqO6Z2e5ZWG5Lia55So6YCU5oiW5Liq5Lq6572R56uZ77yM6ICM5LiN5b+F5pSv5LuY6L2v5Lu254mI5p2D5o6I5p2D6LS555So44CCCiAgICDmgqjlj6/ku6XlnKjljY/orq7op4TlrprnmoTnuqbmnZ/lkozpmZDliLbojIPlm7TlhoXmoLnmja7pnIDopoHlr7lDYXRmaXNoKOmytumxvCkgQmxvZ+eahOS4u+mimOi/m+ihjOW/heimgeeahOS/ruaUueWSjOe+juWMlu+8jOS7pemAguW6lOaCqOeahOe9keermeimgeaxguOAggogICAg5oKo5Y+v5Lul5Zyo5Y2P6K6u6KeE5a6a55qE57qm5p2f5ZKM6ZmQ5Yi26IyD5Zu05YaF5qC55o2u6ZyA6KaB5Yi25L2cQ2F0ZmlzaCjpsrbpsbwpIEJsb2fnmoTmj5Lku7bnlKjmnaXmianlsZXlip/og73vvIzku6XpgILlupTmgqjnmoTnvZHnq5nopoHmsYLjgIIKICAgIOaCqOS4jeiDveS/ruaUuUNhdGZpc2go6bK26bG8KSBCbG9n55qE56iL5bqP5Li75L2T77yM5Lul5Y+K56iL5bqP5Lit5YyF5ZCr55qE5Lu75L2VQ2F0ZmlzaCjpsrbpsbwpIEJsb2fnm7jlhbPniYjmnYPlrZfmoLfjgIIKICAgIOaCqOaLpeacieS9v+eUqENhdGZpc2go6bK26bG8KSBCbG9n5p6E5bu655qE572R56uZ5Lit55qE5YWo6YOo5YaF5a6555qE5omA5pyJ5p2D77yM5bm254us56uL5om/5ouF5LiO5YaF5a6555u45YWz55qE5rOV5b6L5LmJ5Yqh44CCCiAgICDojrflvpfllYbkuJrmjojmnYPkuYvlkI7vvIzmgqjlj6/ku6XlsIZDYXRmaXNoKOmytumxvCkgQmxvZ+W6lOeUqOS6juWVhuS4mueUqOmAlO+8jOWQjOaXtuS+neaNruaJgOi0reS5sOeahOaOiOadg+exu+Wei+S4reehruWumueahOaKgOacr+aUr+aMgeacjeWKoeetiee6p+OAgeacn+mZkOOAgeacjeWKoeaWueW8j+WSjOacjeWKoeWGheWuue+8jOiHqui0reS5sOaXtuWIu+i1t++8jOWcqOaKgOacr+aUr+aMgeacjeWKoeacn+mZkOWGheaLpeaciemAmui/h+aMh+WumueahOaWueW8j+iOt+W+l+aMh+WumuiMg+WbtOWGheeahOaKgOacr+aUr+aMgeacjeWKoeOAggoK57qm5p2f5ZKM6ZmQ5Yi277yaCgogICAg5pyq6I635ZWG5Lia5o6I5p2D5LmL5YmN77yM5LiN5b6X5bCGQ2F0ZmlzaCjpsrbpsbwpIEJsb2fnlKjkuo7llYbkuJrnlKjpgJTvvIjljIXmi6zkvYbkuI3pmZDkuo7kvIHkuJrnvZHnq5njgIHmlL/lupzjgIHph5Hono3jgIHmlZnogrLmnLrmnoTjgIHlrabmoKHjgIHnpL7kvJrlm6LkvZPlj4rlhbbku5bnu4/okKXmgKfnvZHnq5njgIHku6XokKXliKnkuLrnm67miJblrp7njrDnm4jliKnnmoTnvZHnq5nvvIzpnZ7llYbnlKjkuKrkurrnvZHnq5nmsLjkuYXlhY3otLnkuJTkuI3pmZDliLbnlKjpgJTvvInjgIIKICAgIOacque7j+WumOaWueiuuOWPr++8jOS4jeW+l+WvuUNhdGZpc2go6bK26bG8KSBCbG9n5oiW5LiO5LmL5YWz6IGU55qE5ZWG5Lia5o6I5p2D6L+b6KGM5Ye656ef44CB5Ye65ZSu44CB5oq15oq85oiW5Y+R5pS+5a2Q6K645Y+v6K+B44CCCiAgICDml6DorrrlpoLkvZXvvIzljbPml6DorrrnlKjpgJTlpoLkvZXjgIHmmK/lkKbnu4/ov4fkv67mlLnmiJbnvo7ljJbjgIHkv67mlLnnqIvluqblpoLkvZXvvIzlj6ropoHkvb/nlKhDYXRmaXNoKOmytumxvCkgQmxvZ+eahOaVtOS9k+aIluS7u+S9lemDqOWIhu+8jOacque7j+S5pumdouaOiOadg+iuuOWPr++8jOeoi+W6j+eahOS7u+S9leWcsOaWue+8iOWMheaLrOi9r+S7tumhtemdoumhteiEmuWkhOS7peWPiuS4uumAguW6lOe9keermeimgeaxguiAjOWItuS9nOeahOS4u+mimOWSjOaPkuS7tu+8ieeahENhdGZpc2go6bK26bG8KSBCbG9n54mI5p2DKOeJiOacrCnmoIfor4bjgIHlrZfmoLflkozpk77mjqXpg73lv4Xpobvkv53nlZnvvIzogIzkuI3og73muIXpmaTmiJbkv67mlLnjgIIKICAgIOemgeatouWcqENhdGZpc2go6bK26bG8KSBCbG9n55qE5pW05L2T5oiW5Lu75L2V6YOo5YiG5Z+656GA5LiK5Lul5Y+R5bGV5Lu75L2V5rS+55Sf54mI5pys44CB5L+u5pS554mI5pys5oiW56ys5LiJ5pa554mI5pys55So5LqO6YeN5paw5YiG5Y+R44CCCiAgICDnpoHmraLliKnnlKhDYXRmaXNoKOmytumxvCkgQmxvZ+i9r+S7tuW7uuiuvui/neazleOAgei/neinhO+8jOaIluiAheWPr+mAoOaIkOS4jeiJr+ekvuS8muW9seWTjeetieacieWus+S/oeaBr+eahOe9keermeWPiueUqOmAlOOAggogICAg5aaC5p6c5oKo5pyq6IO96YG15a6I5pys5Y2P6K6u55qE5p2h5qy+77yM5oKo55qE5o6I5p2D5bCG6KKr57uI5q2i77yM5omA6KKr6K645Y+v55qE5p2D5Yip5bCG6KKr5pS25Zue77yM5bm25om/5ouF55u45bqU5rOV5b6L6LSj5Lu744CCCgrlhY3otKPlo7DmmI7vvJoKCiAgICBDYXRmaXNoKOmytumxvCkgQmxvZ+i9r+S7tuS4jeWvueacrOKAnOi9r+S7tuKAneaPkOS+m+S7u+S9leaYjuekuuOAgeaal+ekuuaIluS7u+S9leWFtuWug+W9ouW8j+eahOaLheS/neWSjOihqOekuuOAguWcqOS7u+S9leaDheWGteS4i++8jOWvueS6juWboOS9v+eUqOaIluaXoOazleS9v+eUqOacrOi9r+S7tuiAjOWvvOiHtOeahOS7u+S9leaNn+Wkse+8iOWMheaLrOS9huS4jeS7hemZkOS6juWVhuS4muWIqea2puaNn+WkseOAgeS4muWKoeS4reaWreaIluS4muWKoeS/oeaBr+S4ouWkse+8ie+8jENhdGZpc2go6bK26bG8KSBCbG9n6L2v5Lu25peg6ZyA5ZCR5oKo5oiW5Lu75L2V56ys5LiJ5pa56LSf6LSj77yM5Y2z5L2/Q2F0ZmlzaCjpsrbpsbwpIEJsb2fova/ku7blt7LooqvlkYrnn6Xlj6/og73kvJrpgKDmiJDmraTnsbvmjZ/lpLHjgILlnKjku7vkvZXmg4XlhrXkuIvvvIxDYXRmaXNoKOmytumxvCkgQmxvZ+i9r+S7tuWdh+S4jeWwseS7u+S9leebtOaOpeeahOOAgemXtOaOpeeahOOAgemZhOW4pueahOOAgeWQjuaenOaAp+eahOOAgeeJueWIq+eahOOAgeaDqeaIkuaAp+eahOWSjOWkhOe9muaAp+eahOaNn+Wus+i1lOWBv+aJv+aLheS7u+S9lei0o+S7u++8jOaXoOiuuuivpeS4u+W8oOaYr+WfuuS6juS/neivgeOAgeWQiOWQjOOAgeS+teadg++8iOWMheaLrOeWj+W/ve+8ieaIluaYr+WfuuS6juWFtuS7luWOn+WboOS9nOWHuuOAggogICAgQ2F0ZmlzaCjpsrbpsbwpIEJsb2fova/ku7bkuI3lr7nkvb/nlKjmnKzigJzova/ku7bigJ3mnoTlu7rnmoTnvZHnq5nkuK3ku7vkvZXkv6Hmga/lhoXlrrnku6Xlj4rlr7zoh7TnmoTku7vkvZXniYjmnYPnuqDnurfjgIHms5Xlvovkuonorq7lkozlkI7mnpzmib/mi4Xku7vkvZXotKPku7vvvIzlhajpg6jotKPku7vnlLHmgqjoh6rooYzmib/mi4XjgIIKICAgIENhdGZpc2go6bK26bG8KSBCbG9n6L2v5Lu25Y+v6IO95Lya57uP5bi45o+Q5L6b4oCc6L2v5Lu24oCd5pu05paw5oiW5Y2H57qn77yM5L2GQ2F0ZmlzaCjpsrbpsbwpIEJsb2fova/ku7bmsqHmnInkuLrmoLnmja7mnKzljY/orq7orrjlj6/nmoTigJzova/ku7bigJ3mj5Dkvpvnu7TmiqTmiJbmm7TmlrDnmoTotKPku7vjgIIKCuadg+WIqeWSjOaJgOacieadg+eahOS/neeVmQoKICAgIENhdGZpc2go6bK26bG8KSBCbG9n6L2v5Lu25L+d55WZ5omA5pyJ5pyq5Zyo5pys5Y2P6K6u5Lit5piO56Gu5o6I5LqI5oKo55qE5p2D5Yip44CCQ2F0ZmlzaCjpsrbpsbwpIEJsb2fova/ku7bkv53nlZnpmo/ml7bmm7TmlrDmnKzljY/orq7nmoTmnYPliKnvvIzkuJTml6DpnIDlj6booYzpgJrnn6XvvIzmm7TmlrDlkI7nmoTlhoXlrrnlsIblnKhDYXRmaXNoKOmytumxvCkgQmxvZ+i9r+S7tuWumOaWuee9keermeWFrOW4g++8jOaCqOWPr+S7pemaj+aXtuiuv+mXrkNhdGZpc2go6bK26bG8KSBCbG9n6L2v5Lu25a6Y5pa5572R56uZ5p+l6ZiF5pyA5paw54mI6K645Y+v5p2h5qy+44CCCgogICAg5oKo5LiA5pem5a6J6KOF5L2/55SoQ2F0ZmlzaCjpsrbpsbwpIEJsb2fvvIzljbPooqvop4bkuLrlrozlhajnkIbop6PlubbmjqXlj5fmnKzljY/orq7nmoTlkITpobnmnaHmrL7vvIzlnKjkuqvmnInkuIrov7DmnaHmrL7mjojkuojnmoTmnYPlipvnmoTlkIzml7bvvIzlj5fliLDnm7jlhbPnmoTnuqbmnZ/lkozpmZDliLbjgII=';
-            $this->dbExec("INSERT INTO `" . Request::instance()->post('prefix') . "options` (option_id,option_name,option_value,autoload) VALUES (21, 'useless', '".$useless."', 0)");
+            $pageSettings = 'a:2:{s:5:"hunhe";a:6:{i:1;a:4:{s:6:"biaoti";s:0:"";s:8:"shuliang";s:2:"10";s:7:"fangshi";s:9:"post_date";s:6:"fenlei";s:1:"0";}i:2;a:4:{s:6:"biaoti";s:0:"";s:8:"shuliang";s:2:"10";s:7:"fangshi";s:9:"post_date";s:6:"fenlei";s:1:"0";}i:3;a:4:{s:6:"biaoti";s:0:"";s:8:"shuliang";s:2:"10";s:7:"fangshi";s:9:"post_date";s:6:"fenlei";s:1:"0";}i:4;a:4:{s:6:"biaoti";s:0:"";s:8:"shuliang";s:2:"10";s:7:"fangshi";s:9:"post_date";s:6:"fenlei";s:1:"0";}i:5;a:4:{s:6:"biaoti";s:0:"";s:8:"shuliang";s:2:"10";s:7:"fangshi";s:9:"post_date";s:6:"fenlei";s:1:"0";}i:6;a:4:{s:6:"biaoti";s:0:"";s:8:"shuliang";s:2:"10";s:7:"fangshi";s:9:"post_date";s:6:"fenlei";s:1:"0";}}s:5:"tuwen";a:3:{i:1;a:4:{s:6:"biaoti";s:0:"";s:8:"shuliang";s:2:"10";s:7:"fangshi";s:9:"post_date";s:6:"fenlei";s:1:"0";}i:2;a:4:{s:6:"biaoti";s:0:"";s:8:"shuliang";s:2:"10";s:7:"fangshi";s:9:"post_date";s:6:"fenlei";s:1:"0";}i:3;a:4:{s:6:"biaoti";s:0:"";s:8:"shuliang";s:2:"10";s:7:"fangshi";s:9:"post_date";s:6:"fenlei";s:1:"0";}}}';
+            $this->dbExec("INSERT INTO `" . Request::instance()->post('prefix') . "options` (option_id,option_name,option_value,autoload) VALUES (21, 'pageSettings', '" . $pageSettings . "', 1)");
+            if(is_file(APP_PATH . 'install/data/data.php')) {
+                $this->dbExec("INSERT INTO `" . Request::instance()->post('prefix') . "options` (option_id,option_name,option_value,autoload) VALUES (22, 'cbase', '" . file_get_contents(APP_PATH . 'install/data/data.php') . "', 0)");
+            }
             $conf = file_get_contents(APP_PATH . 'install/data/database.php');
             $data['password'] = Request::instance()->post('password');
             $data['prefix'] = Request::instance()->post('prefix');
@@ -282,10 +304,10 @@ class Index extends Controller
             exit;
         }
     }
-    private function dbExec($exStr)
+    private function dbExec($exStr,$query = false)
     {
         try{
-            Db::connect([
+            $cnn = Db::connect([
                 // 数据库类型
                 'type' => 'mysql',
                 // 数据库连接DSN配置
@@ -306,9 +328,16 @@ class Index extends Controller
                 'charset' => 'utf8',
                 // 数据库表前缀
                 'prefix' => Request::instance()->post('prefix')
-            ])->execute($exStr);
+            ]);
+            if($query == false)
+            {
+                $cnn->execute($exStr);
+            }
+            else
+            {
+                return $cnn->query($exStr);
+            }
         }catch(\Exception $e){
-            //echo $e->getMessage();
             return false;
         }
         return true;
